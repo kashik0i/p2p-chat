@@ -4,11 +4,12 @@ import type {Message} from "@/interfaces/Message";
 // import {EventEmitter} from "events";
 import EventEmitter from 'eventemitter3'
 
-interface Action<T>{
+interface Action<T> {
     send: ActionSender<T>
     receive: ActionReceiver<T>
     progress: ActionProgress
 }
+
 interface PeerEvents {
     join: (peerId: string) => void
     leave: (peerId: string) => void
@@ -22,16 +23,42 @@ interface PeerActions {
     // stream: Action<MediaStream>
 }
 
-export class PeerService{
+export class PeerService {
     selfId = selfId
     instance: Room
-    actions:PeerActions;
-    ee:EventEmitter<PeerEvents> = new EventEmitter<PeerEvents>()
+    actions: PeerActions;
+    ee: EventEmitter<PeerEvents> = new EventEmitter<PeerEvents>()
     peers: string[] = []
 
     constructor() {
-        const config = {appId: 'san_narciso_3d'}
-        this.instance = joinRoom(config, import.meta.env.VITE_APP_ID)
+        const config = {
+            appId: import.meta.env.VITE_APP_ID,
+            rtcConfig: {
+                iceServers: [
+                    {"urls": "stun:stun.relay.metered.ca:80"},
+                    {
+                        "urls": "turn:a.relay.metered.ca:80",
+                        "username": "7f6092c5939e54e19d54ce06",
+                        "credential": "RumGyEc481RXhlDS"
+                    },
+                    {
+                        "urls": "turn:a.relay.metered.ca:80?transport=tcp",
+                        "username": "7f6092c5939e54e19d54ce06",
+                        "credential": "RumGyEc481RXhlDS"
+                    },
+                    {
+                        "urls": "turn:a.relay.metered.ca:443",
+                        "username": "7f6092c5939e54e19d54ce06",
+                        "credential": "RumGyEc481RXhlDS"
+                    },
+                    {
+                        "urls": "turn:a.relay.metered.ca:443?transport=tcp",
+                        "username": "7f6092c5939e54e19d54ce06",
+                        "credential": "RumGyEc481RXhlDS"
+                    }]
+            }
+        }
+        this.instance = joinRoom(config, "default")
         this.instance.onPeerJoin((peer) => {
             console.log('peer joined', peer)
             this.ee.emit('join', peer)
@@ -45,7 +72,7 @@ export class PeerService{
         // this.instance.onPeerStream(
         //     (stream, peerId) => (peerElements[peerId].video.srcObject = stream)
         // )
-        let [send, receive,progress] = this.instance.makeAction<Message>('message')
+        let [send, receive, progress] = this.instance.makeAction<Message>('message')
         receive((message) => {
             console.log('received message', message)
             this.ee.emit('message', message)
