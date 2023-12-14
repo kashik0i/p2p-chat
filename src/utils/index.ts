@@ -1,0 +1,1 @@
+export {randomGradiant} from './gradiant';
