@@ -30,6 +30,7 @@
     "crypto-browserify": "^3.12.0",
     "eventemitter3": "^5.0.1",
     "generate-avatar": "^1.4.10",
+    "js-base64": "^3.7.5",
     "peerjs": "^1.5.2",
     "preline": "^2.0.2",
     "radix-icons-svelte": "^1.2.1",
