@@ -3,19 +3,21 @@
     import Peer from "peerjs";
     import {applicationStore} from "@stores/applicationStore";
     import {selfId} from "trystero";
+    import {NativeSelect} from "@svelteuidev/core";
 
     let userVideoSrc: HTMLVideoElement;
     let otherUserVideoSrc: HTMLVideoElement;
     $: console.log(userVideoSrc, otherUserVideoSrc);
     // $: userId = $applicationStore.userService.user.id;
     $: userId = $applicationStore.peerService.selfId;
-    $: options = {
-        users: $applicationStore.peerService.peers
-    }
+    const peers = $applicationStore.peerService.peers;
+    let options: string[] = [];
     let selected: string;
     let peer: Peer;
     onMount(async () => {
-
+        peers.subscribe(peers => {
+            options = peers.map(peer => peer);
+        })
         try {
             peer = new Peer(userId);
             userVideoSrc.srcObject = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
@@ -50,7 +52,8 @@
 </script>
 <div class="container">
     <div>
-<!--        <Select bind:selected={selected} bind:options={options}/>-->
+        {selected}
+        <NativeSelect bind:value={selected} bind:data={options}/>
     </div>
     <div class="video-container">
         <video id="current-user" autoplay bind:this={userVideoSrc}/>
