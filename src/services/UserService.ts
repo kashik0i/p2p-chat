@@ -1,17 +1,21 @@
 import {User} from "@/interfaces/User";
+import {generateAvatar} from "@utils/avatar";
+import {writable} from "svelte/store";
 
 export class UserService {
-    user: User
+    user = writable<User>()
 
     constructor() {
         console.log('UserService constructor');
-        this.user = new User({
+        const id = Math.random().toString(36).substring(7)
+        this.user = writable(new User({
             name: {
                 title: 'Mr.',
                 first: 'John',
                 last: 'Doe'
             },
-            id: Math.random().toString(36).substring(7),
-        })
+            id,
+            avatar: generateAvatar(id)
+        }))
     }
 }

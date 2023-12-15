@@ -2,7 +2,6 @@
     import {onMount} from "svelte";
     import Peer from "peerjs";
     import {applicationStore} from "@stores/applicationStore";
-    import Select from "@components/Select.svelte";
     import {selfId} from "trystero";
 
     let userVideoSrc: HTMLVideoElement;
@@ -51,7 +50,7 @@
 </script>
 <div class="container">
     <div>
-        <Select bind:options bind:value={selected}/>
+<!--        <Select bind:selected={selected} bind:options={options}/>-->
     </div>
     <div class="video-container">
         <video id="current-user" autoplay bind:this={userVideoSrc}/>

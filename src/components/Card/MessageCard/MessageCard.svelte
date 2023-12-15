@@ -6,7 +6,7 @@
 
 
 <div class="chat">
-    <Avatar avatar={chat.avatar} />
+    <Avatar src={chat.avatar} radius="xl"/>
     <div class="ml-3">
         <div class="title">{chat.title}</div>
         <div class="lastMessage">{chat.lastMessage.content}</div>

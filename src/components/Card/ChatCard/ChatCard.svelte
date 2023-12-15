@@ -1,6 +1,6 @@
 <script lang="ts">
-    import Avatar from "../../Avatar.svelte";
-    import {randomGradiant} from "../../../utils";
+    import Avatar from "@components/Avatar.svelte";
+    import {randomGradiant} from "@/utils";
 
     export let title: string = 'Hello World!';
     export let avatar: string = '';

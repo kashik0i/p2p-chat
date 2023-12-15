@@ -1,96 +1,22 @@
 import type {Config} from 'tailwindcss';
-import plugin from 'tailwindcss/plugin';
-import typography from '@tailwindcss/typography';
 import {getIconCollections, iconsPlugin} from "@egoist/tailwindcss-icons";
-
+// import * as Scrollbar from 'tailwind-scrollbar';
 export default {
     content: ["./index.html",
-        './src/**/*.{html,js,svelte,ts}'],
+        './src/**/*.{html,js,svelte,ts}',
+        'node_modules/preline/dist/*.js'
+    ],
 
     theme: {
-        container: {
-            center: true,
-            padding: '2rem',
-            screens: {
-                '2xl': '1440px',
-            },
-        },
-        extend: {
-            colors: {
-                magnum: {
-                    '50': '#fff9ed',
-                    '100': '#fef2d6',
-                    '200': '#fce0ac',
-                    '300': '#f9c978',
-                    '400': '#f7b155',
-                    '500': '#f38d1c',
-                    '600': '#e47312',
-                    '700': '#bd5711',
-                    '800': '#964516',
-                    '900': '#793a15',
-                    '950': '#411c09',
-                },
-            },
-            fontFamily: {
-                sans: [
-                    '-apple-system',
-                    'BlinkMacSystemFont',
-                    'Segoe UI',
-                    'Roboto',
-                    'Oxygen',
-                    'Ubuntu',
-                    'Cantarell',
-                    'Fira Sans',
-                    'Droid Sans',
-                    'Helvetica Neue',
-                    'Arial',
-                    'sans-serif',
-                    'Apple Color Emoji',
-                    'Segoe UI Emoji',
-                    'Segoe UI Symbol',
-                ],
-                mono: [
-                    'ui-monospace',
-                    'SFMono-Regular',
-                    'SF Mono',
-                    'Menlo',
-                    'Consolas',
-                    'Liberation Mono',
-                    'monospace',
-                ],
-            },
-            typography: (theme) => ({
-                DEFAULT: {
-                    css: {
-                        code: {
-                            position: 'relative',
-                            borderRadius: theme('borderRadius.md'),
-                        },
-                    },
-                },
-            }),
-        },
+
     },
+    important: true, // <-- adding this line will give your Tailwind classes !important by default
 
     plugins: [
+        require('preline/plugin'),
+        require('tailwind-scrollbar')({ nocompatible: true }),
         iconsPlugin({
-            // Select the icon collections you want to use
-            // You can also ignore this option to automatically discover all icon collections you have installed
             collections: getIconCollections(["mdi", "lucide"]),
-        }),
-        typography,
-        plugin(function ({addVariant, matchUtilities, theme}) {
-            addVariant('hocus', ['&:hover', '&:focus']);
-            // Square utility
-            matchUtilities(
-                {
-                    square: (value) => ({
-                        width: value,
-                        height: value,
-                    }),
-                },
-                {values: theme('spacing')}
-            );
         }),
     ],
 } satisfies Config;

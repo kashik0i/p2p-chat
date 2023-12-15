@@ -50,11 +50,12 @@ export class User {
     //     thumbnail: string;
     // };
     // nat: string;
-
-    constructor(data: User) {
+    avatar: string;
+    peerId: string = '';
+    constructor(data: { name: { last: string; title: string; first: string }; id: string; avatar: string }) {
         this.name = data.name;
         this.id = data.id;
-
+        this.avatar = data.avatar;
     }
 }
 
