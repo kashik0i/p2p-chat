@@ -84,7 +84,12 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoAudio,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.AUDIO
+                type:MessageTypeEnum.AUDIO,
+                metadata: {
+                    name: 'audio.mp3',
+                    size: 0,
+                    type: 'audio/mp3',
+                }
             },
             {
                 id: '3',
@@ -92,7 +97,12 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoVideo,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.VIDEO
+                type:MessageTypeEnum.VIDEO,
+                metadata: {
+                    name: 'video.mp4',
+                    size: 0,
+                    type: 'video/mp4',
+                }
             },
             {
                 id: '4',
@@ -100,7 +110,12 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoImage,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.IMAGE
+                type:MessageTypeEnum.IMAGE,
+                metadata: {
+                    name: 'image.png',
+                    size: 0,
+                    type: 'image/png',
+                }
             },
             {
                 id: '5',
@@ -108,7 +123,12 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: fileUrl,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.FILE
+                type:MessageTypeEnum.FILE,
+                metadata: {
+                    name: 'file.test',
+                    size: 0,
+                    type: 'application/octet-stream',
+                }
             }
 
         ]

@@ -38,10 +38,14 @@
             <div class="flex flex-row items-center" slot="message">
                 {#if message.type === MessageTypeEnum.TEXT}
                     {message.content}
+                {:else if message.type === MessageTypeEnum.AUDIO}
+                    <audio src={message.content} controls></audio>
                 {:else if message.type === MessageTypeEnum.IMAGE}
-                    <img src={message.content} alt=""/>
+                    <img src={message.content} alt={message.metadata.name}/>
                 {:else if message.type === MessageTypeEnum.FILE}
-                    <a href={message.content} download={message.content}>{message.content}</a>
+                    <a href={message.content} download={message?.metadata?.name}>{message?.metadata?.name}</a>
+                {:else if message.type === MessageTypeEnum.VIDEO}
+                    <video src={message.content} controls></video>
                 {/if}
             </div>
         </SelfMessage>
@@ -50,10 +54,12 @@
             <div class="flex flex-row items-center" slot="message">
                 {#if message.type === MessageTypeEnum.TEXT}
                     {message.content}
+                {:else if message.type === MessageTypeEnum.AUDIO}
+                    <audio src={message.content} controls></audio>
                 {:else if message.type === MessageTypeEnum.IMAGE}
-                    <img src={message.content} alt="image"/>
+                    <img src={message.content} alt={message.metadata.name}/>
                 {:else if message.type === MessageTypeEnum.FILE}
-                    <a href={message.content} download={message.content}>{message.content}</a>
+                    <a href={message.content} download={message?.metadata?.name}>{message?.metadata?.name}</a>
                 {:else if message.type === MessageTypeEnum.VIDEO}
                     <video src={message.content} controls></video>
                 {/if}
