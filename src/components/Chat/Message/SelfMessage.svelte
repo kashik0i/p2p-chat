@@ -19,9 +19,7 @@
         </div>
         <div class="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
             <div>
-                <p class="leading-normal text-gray-900">
-                    {message.content}
-                </p>
+                <slot name="message"/>
             </div>
             {#if seen}
                 <Seen/>

@@ -1,0 +1,18 @@
+export enum MessageTypeEnum{
+    TEXT = 'TEXT',
+    IMAGE = 'IMAGE',
+    VIDEO = 'VIDEO',
+    AUDIO = 'AUDIO',
+    FILE = 'FILE',
+    LOCATION = 'LOCATION',
+    CONTACT = 'CONTACT',
+    STICKER = 'STICKER',
+    EMOJI = 'EMOJI',
+    GIF = 'GIF',
+    POLL = 'POLL',
+    REPLY = 'REPLY',
+    FORWARDED = 'FORWARDED',
+    SYSTEM = 'SYSTEM',
+    CALL = 'CALL',
+    GROUP_JOIN = 'GROUP_JOIN',
+}

@@ -8,6 +8,7 @@
     import {onMount} from "svelte";
     import {Menu} from "@svelteuidev/core";
     import ContextMenu from "@components/ContextMenu.svelte";
+    import {MessageTypeEnum} from "@/enums/MessageTypeEnum";
 
     export let isSelf = false;
     export let message: Message;
@@ -32,6 +33,34 @@
     });
 </script>
 <div>
-    <svelte:component this={component} {...props}/>
+    {#if component === SelfMessage}
+        <SelfMessage {...props}>
+            <div class="flex flex-row items-center" slot="message">
+                {#if message.type === MessageTypeEnum.TEXT}
+                    {message.content}
+                {:else if message.type === MessageTypeEnum.IMAGE}
+                    <img src={message.content} alt=""/>
+                {:else if message.type === MessageTypeEnum.FILE}
+                    <a href={message.content} download={message.content}>{message.content}</a>
+                {/if}
+            </div>
+        </SelfMessage>
+    {:else}
+        <OtherMessage {...props}>
+            <div class="flex flex-row items-center" slot="message">
+                {#if message.type === MessageTypeEnum.TEXT}
+                    {message.content}
+                {:else if message.type === MessageTypeEnum.IMAGE}
+                    <img src={message.content} alt="image"/>
+                {:else if message.type === MessageTypeEnum.FILE}
+                    <a href={message.content} download={message.content}>{message.content}</a>
+                {:else if message.type === MessageTypeEnum.VIDEO}
+                    <video src={message.content} controls></video>
+                {/if}
+            </div>
+        </OtherMessage>
+    {/if}
+
+    <!--    <svelte:component this={component} {...props}/>-->
 </div>
 

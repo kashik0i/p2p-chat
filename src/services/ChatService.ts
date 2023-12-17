@@ -3,7 +3,10 @@ import type {Writable} from "svelte/store";
 import {get, writable} from "svelte/store";
 import type {User} from "@/interfaces/User";
 import type {Chat} from "@/interfaces/Chat";
-import {generateAvatar} from "@/utils";
+import {MessageTypeEnum} from "@/enums/MessageTypeEnum";
+import demoVideo from "@assets/demo.mp4";
+import demoAudio from "@assets/demo.mp3";
+import demoImage from "@assets/svelte.svg";
 
 export class ChatService {
     public conversations: Writable<Map<string, Chat>> = writable(new Map<string, Chat>())
@@ -12,9 +15,10 @@ export class ChatService {
 
     constructor() {
         console.log('ChatService constructor')
+        const messages = this.seedMessages()
         const globalChat: Chat = {
             id: import.meta.env.VITE_GLOBAL_CHAT_ID,
-            messages: [],
+            messages: messages,
             users: new Map<string, User>(),
             avatar: '',
             name: 'Global Chat'
@@ -32,6 +36,7 @@ export class ChatService {
     }
 
     addMessage(message: Message) {
+        console.log('addMessage', message)
         const conversationId = message.conversationId
         if (conversationId === "" || conversationId === undefined) return;
         this.conversations.update(conversations => {
@@ -49,5 +54,63 @@ export class ChatService {
         const conversation = get(this.conversations).get(id)
         if (conversation === undefined) return;
         return [...conversation.users.values()]
+    }
+
+    private seedMessages():Message[] {
+        const audioFile = new File([''], 'audio.mp3', {type: 'audio/mp3'});
+        const audioUrl = URL.createObjectURL(audioFile);
+
+        const videoFile = new File([''], 'video.mp4', {type: 'video/mp4'});
+        const videoUrl = URL.createObjectURL(videoFile);
+
+        const imageFile = new File([''], 'image.png', {type: 'image/png'});
+        const imageUrl = URL.createObjectURL(imageFile);
+
+        const fileFile = new File([''], 'file.test', {type: 'application/octet-stream'});
+        const fileUrl = URL.createObjectURL(fileFile);
+        console.log(demoImage)
+        return [
+            {
+                id: '1',
+                senderId: '1',
+                conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                content: 'Hello World',
+                timestamp: new Date().getTime(),
+                type:MessageTypeEnum.TEXT
+            },
+            {
+                id: '2',
+                senderId: '1',
+                conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                content: demoAudio,
+                timestamp: new Date().getTime(),
+                type:MessageTypeEnum.AUDIO
+            },
+            {
+                id: '3',
+                senderId: '1',
+                conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                content: demoVideo,
+                timestamp: new Date().getTime(),
+                type:MessageTypeEnum.VIDEO
+            },
+            {
+                id: '4',
+                senderId: '1',
+                conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                content: demoImage,
+                timestamp: new Date().getTime(),
+                type:MessageTypeEnum.IMAGE
+            },
+            {
+                id: '5',
+                senderId: '1',
+                conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                content: fileUrl,
+                timestamp: new Date().getTime(),
+                type:MessageTypeEnum.FILE
+            }
+
+        ]
     }
 }

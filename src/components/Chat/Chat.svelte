@@ -6,11 +6,18 @@
     import ChatInput from "@components/Chat/ChatInput.svelte";
     import SendButton from "@components/Chat/SendButton.svelte";
     import type {Chat} from "@/interfaces/Chat";
+    import {Modal} from "@svelteuidev/core";
+    import CameraModal from "@components/Modal/CameraModal.svelte";
+    import FileModal from "@components/Modal/FileModal.svelte";
 
     let value = "";
     let conversations: Map<string, Chat> = new Map<string, Chat>()
     let currentConversationId: string | null = null;
     let currentUser = $applicationStore.userService.user;
+
+    let openCameraModal = false;
+    let openFileModal = false;
+
     onMount(() => {
         const conversationsUnsubscribe = $applicationStore.chatService.conversations.subscribe((c) => {
             conversations = c;
@@ -40,17 +47,50 @@
         }
     }
 
+    function handleOpenModal(e){
+        const type = e.detail.type
+        console.log(type)
+        switch (type) {
+            case "camera":
+                openCameraModal = true;
+                break;
+            case "file":
+                openFileModal = true;
+                break;
+        }
+
+    }
+    function handleCameraUpload(e){
+        if (!currentConversationId) {
+            alert("Select a conversation first");
+            return;
+        }
+        openCameraModal = false;
+        $applicationStore.sendFile(e.detail.file,e.detail.type, currentConversationId);
+    }
+
+    function handleUpload(e){
+        if (!currentConversationId) {
+            alert("Select a conversation first");
+            return;
+        }
+        openFileModal = false;
+        $applicationStore.sendFile(e.detail.file,e.detail.type, currentConversationId);
+    }
+
+
+
 
 </script>
 <div class="flex flex-col flex-auto h-full p-4 w-full">
-    <div class="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-gray-100 h-full p-4">
+    <div class="flex flex-col flex-auto flex-shrink-0 rounded-2xl  h-full p-4">
         <div class="flex flex-col h-full overflow-x-auto mb-4">
             <div class="flex flex-col h-full">
                 <div class="grid grid-cols-12 gap-y-2">
                     {#if currentConversationId === null}
                         <div class="col-span-12">
                             <div class="flex flex-col justify-center items-center h-full">
-                                <div class="text-gray-400 text-xl font-medium">
+                                <div class=" text-xl font-medium">
                                     Select a conversation
                                 </div>
                             </div>
@@ -69,10 +109,16 @@
                 </div>
             </div>
         </div>
-        <div class="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
-            <AttachmentButton/>
+        <div class="flex flex-row items-center h-16 rounded-xl w-full px-4">
+            <AttachmentButton on:upload={handleOpenModal}/>
             <ChatInput on:keydown={handleEnter} bind:value/>
             <SendButton on:click={handleSend}/>
         </div>
     </div>
 </div>
+<Modal bind:opened={openCameraModal} withCloseButton={true} closeOnClickOutside  title="Capture Image" on:close={() => openCameraModal = false}>
+    <CameraModal  on:submit={handleCameraUpload}/>
+</Modal>
+<Modal bind:opened={openFileModal} withCloseButton={true} closeOnClickOutside title="Upload File" on:close={() => openFileModal = false}>
+    <FileModal on:submit={handleUpload}/>
+</Modal>

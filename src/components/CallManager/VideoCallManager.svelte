@@ -4,7 +4,6 @@
     import {ActionIcon} from "@svelteuidev/core";
     import {type Writable, writable} from "svelte/store";
     import VideoContainer from "@components/CallManager/VideoContainer.svelte";
-    import demoVideo from "@assets/demo.mp4";
     let manager: HTMLDivElement;
     let count: number = 0;
     let containers: Writable<ContainerInfo[]> = writable([]);

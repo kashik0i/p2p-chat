@@ -21,6 +21,7 @@ interface PeerEvents {
     leave: (peerId: string) => void
     stream: (stream: MediaStream, peerId: string) => void
     message: (message: Message) => void,
+    file: (file: File,peerId:string,metadata:Message) => void,
     error: (error: Error) => void
 
     typing: (peerId: string) => void
@@ -30,6 +31,7 @@ interface PeerEvents {
 interface PeerActions {
     message: Action<Message>
     user: Action<User>
+    file: Action<File>
     // stream: Action<MediaStream>
 }
 
@@ -94,6 +96,7 @@ export class PeerService {
         // )
         const message = this.instance.makeAction<Message>('message')
         const user = this.instance.makeAction<User>('user')
+        const file = this.instance.makeAction<File>('file')
 
         this.actions = {
             message: {
@@ -105,11 +108,21 @@ export class PeerService {
                 send: user[0],
                 receive: user[1],
                 progress: user[2]
+            },
+            file: {
+                send: file[0],
+                receive: file[1],
+                progress: file[2]
             }
         }
         this.actions.message.receive((message) => {
             console.log('received message', message)
             this.ee.emit('message', message)
+        });
+        // @ts-ignore
+        this.actions.file.receive((file,peerId,metadata:Message) => {
+            console.log('received file', file)
+            this.ee.emit('file', file,peerId,metadata)
         });
         this.actions.user.receive((user) => {
             console.log('received user', user)

@@ -16,7 +16,7 @@ export let message:Message;
                 class="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl"
         >
             <div>
-                <span class="text-gray-600 text-xs">{message.content}</span>
+                <slot name="message"/>
             </div>
         </div>
     </div>

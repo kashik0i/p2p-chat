@@ -8,7 +8,7 @@
     import SettingsLayout from "@/layout/SettingsLayout.svelte";
 
     type AppState = "home" | "chat" | "call" | "settings"
-    let layout = writable<AppState>("call")
+    let layout = writable<AppState>("chat")
 
     const updateLayout = (e) => {
         const index = e.detail.index;
