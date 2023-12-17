@@ -49,7 +49,7 @@
 
 </script>
 <div class="video-call">
-    <div>{count}</div>
+<!--    <div>{count}</div>-->
     <div class="video-call-manager" bind:this={manager}>
         <slot/>
     </div>

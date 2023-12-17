@@ -75,25 +75,7 @@ export class CallService {
             })
             call.on('close', () => {
                 console.log('call closed')
-                this.instance.update((value) => {
-                    value.call = null
-                    value.state = CallStateEnum.Idle
-                    //TODO release local and remote streams
-                    value.localMediaStream.forEach((streamInfo) => {
-                        streamInfo.stream.getTracks().forEach((track) => {
-                            track.stop()
-                        })
-                    })
-                    value.localMediaStream = []
-                    value.remoteMediaStream = []
-                    value.participants = []
-                    value.RoomId = undefined
-                    value.isMuted = true
-                    value.isCameraOff = true
-                    value.isScreenSharing = false
-
-                    return value
-                });
+                this.endCall()
             })
         })
         this.instance.set({
@@ -220,5 +202,30 @@ export class CallService {
             return
         }
         this.callUser(calleeId)
+    }
+
+    endCall() {
+        console.log('end call')
+        this.instance.update((value) => {
+            value?.call?.close()
+
+            value.call = null
+            value.state = CallStateEnum.Idle
+            //TODO release local and remote streams
+            value.localMediaStream.forEach((streamInfo) => {
+                streamInfo.stream.getTracks().forEach((track) => {
+                    track.stop()
+                })
+            })
+            value.localMediaStream = []
+            value.remoteMediaStream = []
+            value.participants = []
+            value.RoomId = undefined
+            value.isMuted = true
+            value.isCameraOff = true
+            value.isScreenSharing = false
+
+            return value
+        });
     }
 }

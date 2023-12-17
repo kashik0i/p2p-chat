@@ -45,7 +45,6 @@ export class PeerService {
     constructor() {
         const config = {
             appId: import.meta.env.VITE_APP_ID,
-            trackerUrls:import.meta.env.VITE_TRACKER_LIST.split(','),
             rtcConfig: {
                 iceServers: [
                     {"urls": "stun:stun.relay.metered.ca:80"},
@@ -70,6 +69,9 @@ export class PeerService {
                         "credential": "RumGyEc481RXhlDS"
                     }]
             }
+        }
+        if (import.meta.env.VITE_TRACKER_LIST!="") {
+            config.trackerUrls = import.meta.env.VITE_TRACKER_LIST.split(',')
         }
         this.instance = joinRoom(config, "default")
         this.instance.onPeerJoin(async (peerId) => {

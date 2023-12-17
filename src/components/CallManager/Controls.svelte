@@ -38,7 +38,8 @@
             <span class="i-lucide-phone"></span>
         {:else if call.state === 'Ringing'}
         {:else}
-            <span class="i-lucide-phone-off bg-red-600"></span>
+            <span class="i-lucide-phone-off bg-red-600" onclick={() => $applicationStore.callService.endCall()}
+            ></span>
         {/if}
     </ActionIcon>
     <select bind:value={calleeId} class="bg-transparent border-none outline-none">
