@@ -1,7 +1,6 @@
 <script lang="ts" xmlns="http://www.w3.org/1999/html">
     import {colorScheme, SvelteUIProvider, Stack, Switch, Text, Tabs} from '@svelteuidev/core';
     import HomeLayout from "@/layout/HomeLayout.svelte";
-    import ChatNav from "@components/Chat/ChatNav.svelte";
     import {writable} from "svelte/store";
     import ChatLayout from "@/layout/ChatLayout.svelte";
     import CallLayout from "@/layout/CallLayout.svelte";
@@ -9,7 +8,7 @@
     import SettingsLayout from "@/layout/SettingsLayout.svelte";
 
     type AppState = "home" | "chat" | "call" | "settings"
-    let layout = writable<AppState>("home")
+    let layout = writable<AppState>("call")
 
     const updateLayout = (e) => {
         const index = e.detail.index;

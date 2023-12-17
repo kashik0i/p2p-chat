@@ -1,8 +1,9 @@
 export enum CallStateEnum {
     Idle = 'Idle',
-    Calling = 'Calling',
+    Incoming = 'Incoming',
+    Outgoing = 'Outgoing',
     Ringing = 'Ringing',
     Answered = 'Answered',
     Ended = 'Ended',
-    Error = 'Error'
+    Error = 'Error',
 }

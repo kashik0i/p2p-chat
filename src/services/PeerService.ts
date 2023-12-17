@@ -4,7 +4,9 @@ import type {Message} from "@/interfaces/Message";
 // import {EventEmitter} from "events";
 import EventEmitter from 'eventemitter3'
 import type {Writable} from "svelte/store";
-import {writable} from "svelte/store";
+import {get, writable} from "svelte/store";
+import type {User} from "@/interfaces/User";
+import {applicationStore} from "@stores/applicationStore";
 
 interface Action<T> {
     send: ActionSender<T>
@@ -14,14 +16,20 @@ interface Action<T> {
 
 interface PeerEvents {
     join: (peerId: string) => void
+    user: (user: User) => void
+
     leave: (peerId: string) => void
     stream: (stream: MediaStream, peerId: string) => void
     message: (message: Message) => void,
     error: (error: Error) => void
+
+    typing: (peerId: string) => void
+    stoppedTyping: (peerId: string) => void
 }
 
 interface PeerActions {
     message: Action<Message>
+    user: Action<User>
     // stream: Action<MediaStream>
 }
 
@@ -30,11 +38,12 @@ export class PeerService {
     instance: Room
     actions: PeerActions;
     ee: EventEmitter<PeerEvents> = new EventEmitter<PeerEvents>()
-    peers: Writable<string[]> = writable([])
+    peers: Writable<Map<string, User>> = writable(new Map<string, User>())
 
     constructor() {
         const config = {
             appId: import.meta.env.VITE_APP_ID,
+            trackerUrls:import.meta.env.VITE_TRACKER_LIST.split(','),
             rtcConfig: {
                 iceServers: [
                     {"urls": "stun:stun.relay.metered.ca:80"},
@@ -61,31 +70,55 @@ export class PeerService {
             }
         }
         this.instance = joinRoom(config, "default")
-        this.instance.onPeerJoin((peer) => {
-            console.log('peer joined', peer)
-            this.ee.emit('join', peer)
-            this.peers.update((peers) => [...peers, peer])
+        this.instance.onPeerJoin(async (peerId) => {
+            console.log('peer joined', peerId)
+            //send user info
+            const currentUser = get(get(applicationStore).userService.user)
+            await this.actions.user.send(currentUser)
+            this.ee.emit('join', peerId)
+            // this.peers.update((peers) => {
+            //     peers.set(peerId, {} as User)
+            //     return peers
+            // })
         })
         this.instance.onPeerLeave((peer) => {
             console.log('peer left', peer)
             this.ee.emit('leave', peer)
-            this.peers.update((peers) => peers.filter((p) => p !== peer))
+            this.peers.update((peers) => {
+                peers.delete(peer)
+                return peers
+            })
         })
         // this.instance.onPeerStream(
         //     (stream, peerId) => (peerElements[peerId].video.srcObject = stream)
         // )
-        let [send, receive, progress] = this.instance.makeAction<Message>('message')
-        receive((message) => {
-            console.log('received message', message)
-            this.ee.emit('message', message)
-        })
+        const message = this.instance.makeAction<Message>('message')
+        const user = this.instance.makeAction<User>('user')
+
         this.actions = {
             message: {
-                send,
-                receive,
-                progress
+                send: message[0],
+                receive: message[1],
+                progress: message[2]
+            },
+            user: {
+                send: user[0],
+                receive: user[1],
+                progress: user[2]
             }
         }
+        this.actions.message.receive((message) => {
+            console.log('received message', message)
+            this.ee.emit('message', message)
+        });
+        this.actions.user.receive((user) => {
+            console.log('received user', user)
+            this.ee.emit('user', user)
+            this.peers.update((peers) => {
+                peers.set(user.id, user)
+                return peers
+            })
+        });
 
     }
 

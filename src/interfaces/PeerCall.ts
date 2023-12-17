@@ -1,11 +1,17 @@
 import type Peer from "peerjs";
 import {CallStateEnum} from "@/enums/CallStateEnum";
+import {MediaConnection} from "peerjs";
+import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
 
 export interface PeerCall {
-    instance: Peer | null;
+    peerConnection: Peer | null;
+    call: MediaConnection | null;
     state: CallStateEnum
-    isOutgoing: boolean
     isMuted: boolean
     isCameraOff: boolean
-    isScreenSharing: boolean
+    isScreenSharing: boolean,
+    participants: string[],
+    RoomId?: string,
+    localMediaStream: MediaStreamInfo[]
+    remoteMediaStream: MediaStreamInfo[]
 }

@@ -1,9 +1,7 @@
-import type {User} from "@/interfaces/User";
-
 export interface Message {
     id: string;
     content: string;
-    sender: User;
-    // receiver: string;
+    senderId: string;
     timestamp: number;
+    conversationId?: string;
 }

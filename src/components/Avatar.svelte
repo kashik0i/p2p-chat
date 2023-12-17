@@ -4,6 +4,4 @@
     export let src = 'https://avatars.githubusercontent.com/u/1';
     export let radius = 'md';
 </script>
-
-
 <Image {radius} {src} class="w-full" />

@@ -2,22 +2,35 @@
     import {onMount} from "svelte";
     import {applicationStore} from "@stores/applicationStore";
     import Message from "@components/Chat/Message/Message.svelte";
-    import type {Writable} from "svelte/store";
     import AttachmentButton from "@components/Chat/AttachmentButton.svelte";
     import ChatInput from "@components/Chat/ChatInput.svelte";
     import SendButton from "@components/Chat/SendButton.svelte";
+    import type {Chat} from "@/interfaces/Chat";
 
     let value = "";
-    let messages:Message[] = [];
+    let conversations: Map<string, Chat> = new Map<string, Chat>()
+    let currentConversationId: string | null = null;
     let currentUser = $applicationStore.userService.user;
     onMount(() => {
-        $applicationStore.chatService.messages.subscribe((value) => {
-            messages = value;
-        });
+        const conversationsUnsubscribe = $applicationStore.chatService.conversations.subscribe((c) => {
+            conversations = c;
+            console.log(c)
+        })
+        const currentConversationIdUnsubscribe = $applicationStore.chatService.currentConversationId.subscribe(id => {
+            currentConversationId = id
+        })
+        return () => {
+            conversationsUnsubscribe();
+            currentConversationIdUnsubscribe();
+        }
     });
 
     function handleSend() {
-        $applicationStore.send(value);
+        if (!currentConversationId) {
+            alert("Select a conversation first");
+            return;
+        }
+        $applicationStore.send(value, currentConversationId);
         value = "";
     }
 
@@ -29,23 +42,30 @@
 
 
 </script>
-
 <div class="flex flex-col flex-auto h-full p-4 w-full">
-    <div
-            class="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-gray-100 h-full p-4"
-    >
+    <div class="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-gray-100 h-full p-4">
         <div class="flex flex-col h-full overflow-x-auto mb-4">
             <div class="flex flex-col h-full">
                 <div class="grid grid-cols-12 gap-y-2">
-                    {#each messages as message}
+                    {#if currentConversationId === null}
                         <div class="col-span-12">
-                            <Message
-                                    seen={true}
-                                    isSelf={message.sender.id === $currentUser.id}
-                                    message={message}
-                            />
+                            <div class="flex flex-col justify-center items-center h-full">
+                                <div class="text-gray-400 text-xl font-medium">
+                                    Select a conversation
+                                </div>
+                            </div>
                         </div>
-                    {/each}
+                    {:else}
+                        {#each conversations.get(currentConversationId)?.messages as message}
+                            <div class="col-span-12">
+                                <Message
+                                        seen={true}
+                                        isSelf={message.senderId === $currentUser.id.toString()}
+                                        message={message}
+                                />
+                            </div>
+                        {/each}
+                    {/if}
                 </div>
             </div>
         </div>
