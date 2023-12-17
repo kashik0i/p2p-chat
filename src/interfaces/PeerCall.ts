@@ -1,6 +1,6 @@
 import type Peer from "peerjs";
 import {CallStateEnum} from "@/enums/CallStateEnum";
-import {MediaConnection} from "peerjs";
+import type {MediaConnection} from "peerjs";
 import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
 
 export interface PeerCall {

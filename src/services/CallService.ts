@@ -71,16 +71,7 @@ export class CallService {
             });
             call.on('stream', (stream) => {
                 console.log('got stream')
-                this.instance.update((value) => {
-                    if (value.remoteMediaStream.find((s) => s.stream.id === stream.id && s.userId === call.peer)) {
-                        return value
-                    }
-                    value.remoteMediaStream.push({
-                        stream,
-                        userId: call.peer,
-                    })
-                    return value
-                });
+                this.handleStream(stream, call.peer)
             })
             call.on('close', () => {
                 console.log('call closed')
@@ -147,18 +138,10 @@ export class CallService {
                 //TODO add roomId, conversationId, avatar
             }
         })
+
         peerCall.on('stream', (stream) => {
             console.log('got stream', stream, userId)
-            this.instance.update((value) => {
-                if (value.remoteMediaStream.find((s) => s.stream.id === stream.id && s.userId === call.peer)) {
-                    return value
-                }
-                value.remoteMediaStream.push({
-                    stream,
-                    userId,
-                })
-                return value
-            });
+            this.handleStream(stream, userId)
         })
 
         this.instance.update((value) => {
@@ -177,16 +160,40 @@ export class CallService {
         });
     }
 
-    toggleMute() {
+    handleStream(stream: MediaStream, userId: string) {
         this.instance.update((value) => {
-            value.isMuted = !value.isMuted
+            if (value.remoteMediaStream.find((s) => s.stream.id === stream.id && s.userId === userId)) {
+                return value
+            }
+            value.remoteMediaStream.push({
+                stream,
+                userId,
+            })
             return value
         });
+    }
+
+    toggleMute() {
+        this.instance.update((instance) => {
+            instance.isMuted = !instance.isMuted
+            instance.localMediaStream.forEach((streamInfo) => {
+                streamInfo.stream.getAudioTracks().forEach((track) => {
+                    track.enabled = !track.enabled
+                })
+            })
+            return instance
+        });
+
     }
 
     toggleCamera() {
         this.instance.update((value) => {
             value.isCameraOff = !value.isCameraOff
+            value.localMediaStream.forEach((streamInfo) => {
+                streamInfo.stream.getVideoTracks().forEach((track) => {
+                    track.enabled = !track.enabled
+                })
+            })
             return value
         });
     }
@@ -196,5 +203,22 @@ export class CallService {
             value.isScreenSharing = !value.isScreenSharing
             return value
         });
+    }
+
+    toggleCall(calleeId: string) {
+        const instance = get(this.instance)
+        if (instance.call) {
+            instance.call.close()
+            instance.state = CallStateEnum.Idle
+            return
+        }
+        if (instance.state !== CallStateEnum.Idle) {
+            alert('You are already in a call')
+        }
+        if(!calleeId){
+            alert('Please select a user')
+            return
+        }
+        this.callUser(calleeId)
     }
 }
