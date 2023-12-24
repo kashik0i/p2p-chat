@@ -13,5 +13,5 @@ export interface PeerCall {
     participants: string[],
     RoomId?: string,
     localMediaStream: MediaStreamInfo[]
-    remoteMediaStream: MediaStreamInfo[]
+    remoteMediaStream: Map<string,MediaStreamInfo[]>
 }

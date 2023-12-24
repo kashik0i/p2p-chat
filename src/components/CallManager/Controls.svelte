@@ -44,7 +44,7 @@
     </ActionIcon>
     <select bind:value={calleeId} class="bg-transparent border-none outline-none">
         <option value="">Select a user or group to call</option>
-<!--        <option value={import.meta.env.VITE_GLOBAL_CHAT_ID}>Global Chat</option>-->
+        <!--        <option value={import.meta.env.VITE_GLOBAL_CHAT_ID}>Global Chat</option>-->
         {#each Array.from(users.values()) as user}
             <option value={user.id}>{user?.name?.first} {user?.name?.last}</option>
         {/each}
@@ -57,6 +57,14 @@
         {/if}
     </ActionIcon>
 
+    <ActionIcon on:click={() => $applicationStore.callService.toggleScreenShare()}>
+        {#if !call.isScreenSharing}
+            <span class="i-lucide-monitor"></span>
+        {:else}
+            <span class="i-lucide-monitor-off"></span>
+        {/if}
+    </ActionIcon>
+
     <ActionIcon on:click={() => $applicationStore.callService.toggleMute()}>
         {#if !call.isMuted}
             <span class="i-lucide-mic-off"></span>
@@ -66,17 +74,17 @@
     </ActionIcon>
     <Menu {opened} on:open={onOpen} {onClose}>
         <ActionIcon slot="control">
-                {#if volume === 0}
-                    <span class="i-lucide-volume-x"></span>
-                {:else if volume < 25}
-                    <span class="i-lucide-volume"></span>
-                {:else if volume < 50}
-                    <span class="i-lucide-volume-1"></span>
-                {:else if volume <= 100}
-                    <span class="i-lucide-volume-2"></span>
-                {/if}
+            {#if volume === 0}
+                <span class="i-lucide-volume-x"></span>
+            {:else if volume < 25}
+                <span class="i-lucide-volume"></span>
+            {:else if volume < 50}
+                <span class="i-lucide-volume-1"></span>
+            {:else if volume <= 100}
+                <span class="i-lucide-volume-2"></span>
+            {/if}
         </ActionIcon>
-        <Slider bind:value={volume} />
+        <Slider bind:value={volume}/>
     </Menu>
     <ActionIcon>
         <span class="i-lucide-more-vertical"></span>

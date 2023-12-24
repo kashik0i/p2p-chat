@@ -68,10 +68,8 @@ export class PeerService {
                         "username": "7f6092c5939e54e19d54ce06",
                         "credential": "RumGyEc481RXhlDS"
                     }]
-            }
-        }
-        if (import.meta.env.VITE_TRACKER_LIST!="") {
-            config.trackerUrls = import.meta.env.VITE_TRACKER_LIST.split(',')
+            },
+            trackerUrls : import.meta.env?.VITE_TRACKER_LIST?.split(',')
         }
         this.instance = joinRoom(config, "default")
         this.instance.onPeerJoin(async (peerId) => {

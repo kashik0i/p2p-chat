@@ -15,16 +15,16 @@
     let calleeId;
     let users = new Map<string, User>();
     let userStreams: MediaStream[] = [];
-    let remoteStreams: MediaStream[] = [];
+    let remoteStreams: Map<string,  MediaStreamInfo[]> = new Map<string,  MediaStreamInfo[]>();
     onMount(() => {
-        let usersUnsubscribe = $applicationStore.peerService.peers.subscribe(value => {
-            console.log(value)
-            users = value;
+        let usersUnsubscribe = $applicationStore.peerService.peers.subscribe(call => {
+            console.log(call)
+            users = call;
         })
-        let currentCallUnsubscribe = $applicationStore.callService.instance.subscribe(value => {
-            userStreams = value.localMediaStream.map(stream => stream.stream);
-            remoteStreams = value.remoteMediaStream.map(stream => stream.stream);
-            currentCall = value;
+        let currentCallUnsubscribe = $applicationStore.callService.instance.subscribe(call => {
+            userStreams = call.localMediaStream.map(stream => stream.stream);
+            remoteStreams = call.remoteMediaStream;
+            currentCall = call;
         })
 
         return () => {
@@ -54,9 +54,9 @@
                     muted={true}
             />
         {/each}
-        {#each remoteStreams as stream}
+        {#each [...remoteStreams.values()] as streamInfo}
             <VideoContainer
-                    stream={stream}
+                    bind:stream={streamInfo.stream}
                     muted={false}
             />
         {/each}

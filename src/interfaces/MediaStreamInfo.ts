@@ -1,4 +1,5 @@
 export interface MediaStreamInfo {
-    userId?: string
+    userId: string;
     stream: MediaStream
+    type: "screen" | "camera" | "audio"
 }

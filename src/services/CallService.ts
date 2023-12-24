@@ -3,13 +3,14 @@ import {CallStateEnum} from "@/enums/CallStateEnum";
 import type {PeerCall} from "@/interfaces/PeerCall";
 import {get, type Writable, writable} from "svelte/store";
 import type {User} from "@/interfaces/User";
+import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
 
 export class CallService {
     instance: Writable<PeerCall> = writable()
 
     constructor(user: User) {
         const peer = new Peer(user.id, {
-            debug: 3,
+            // debug: 3,
             // host: 'localhost',
             // port: 9000,
             // path: '/peerjs',
@@ -65,13 +66,20 @@ export class CallService {
             this.instance.update((value) => {
                 value.localMediaStream.push({
                     stream,
+                    type: 'camera',
+                    userId: user.id,
                 })
                 value.state = CallStateEnum.Answered
                 return value
             });
             call.on('stream', (stream) => {
                 console.log('got stream')
-                this.handleStream(stream, call.peer)
+                const streamInfo: MediaStreamInfo = {
+                    stream,
+                    userId: call.peer,
+                    type: 'camera',
+                }
+                this.handleStream(streamInfo)
             })
             call.on('close', () => {
                 console.log('call closed')
@@ -88,7 +96,7 @@ export class CallService {
             participants: [],
             RoomId: undefined,
             localMediaStream: [],
-            remoteMediaStream: []
+            remoteMediaStream: new Map<string, MediaStreamInfo[]>(),
         })
 
     }
@@ -103,13 +111,13 @@ export class CallService {
             video: true,
             audio: true,
         })
-        // if (instance.isMuted){
-        //     mediaStream.getAudioTracks().forEach((track)=>{
+        // if (instance.isMuted) {
+        //     mediaStream.getAudioTracks().forEach((track) => {
         //         track.enabled = false
         //     })
         // }
-        // if (instance.isCameraOff){
-        //     mediaStream.getVideoTracks().forEach((track)=>{
+        // if (instance.isCameraOff) {
+        //     mediaStream.getVideoTracks().forEach((track) => {
         //         track.enabled = false
         //     })
         // }
@@ -123,35 +131,43 @@ export class CallService {
 
         peerCall.on('stream', (stream) => {
             console.log('got stream', stream, userId)
-            this.handleStream(stream, userId)
+            const streamInfo: MediaStreamInfo = {
+                stream,
+                userId,
+                type: 'camera',
+            }
+            this.handleStream(streamInfo)
         })
-
-        this.instance.update((value) => {
-            value = {
-                ...value,
+        const streamInfo: MediaStreamInfo = {
+            stream: mediaStream,
+            userId: instance.peerConnection.id,
+            type: 'camera',
+        }
+        this.instance.update((call) => {
+            call = {
+                ...call,
                 call: peerCall,
-                localMediaStream: [{
-                    stream: mediaStream,
-                    userId: value?.peerConnection?.id,
-                }],
+                localMediaStream: [streamInfo],
                 state: CallStateEnum.Outgoing,
                 participants: [userId],
             }
 
-            return value
+            return call
         });
     }
 
-    handleStream(stream: MediaStream, userId: string) {
-        this.instance.update((value) => {
-            if (value.remoteMediaStream.find((s) => s.stream.id === stream.id && s.userId === userId)) {
-                return value
+    handleStream(streamInfo: MediaStreamInfo) {
+        const userId = streamInfo.userId
+        this.instance.update((call) => {
+            // call.localMediaStream.push(streamInfo)
+            call.remoteMediaStream.set(userId, [streamInfo])
+            return call;
+            if (call.remoteMediaStream.has(userId)) {
+                call.remoteMediaStream.get(userId)?.push(streamInfo)
+            } else {
+                call.remoteMediaStream.set(userId, [streamInfo])
             }
-            value.remoteMediaStream.push({
-                stream,
-                userId,
-            })
-            return value
+            return call
         });
     }
 
@@ -187,7 +203,7 @@ export class CallService {
         });
     }
 
-    toggleCall(calleeId: string) {
+    async toggleCall(calleeId: string) {
         const instance = get(this.instance)
         if (instance.call) {
             instance.call.close()
@@ -197,15 +213,14 @@ export class CallService {
         if (instance.state !== CallStateEnum.Idle) {
             alert('You are already in a call')
         }
-        if(!calleeId){
+        if (!calleeId) {
             alert('Please select a user')
             return
         }
-        this.callUser(calleeId)
+        await this.callUser(calleeId)
     }
 
     endCall() {
-        console.log('end call')
         this.instance.update((value) => {
             value?.call?.close()
 
@@ -218,7 +233,7 @@ export class CallService {
                 })
             })
             value.localMediaStream = []
-            value.remoteMediaStream = []
+            value.remoteMediaStream = new Map<string, MediaStreamInfo[]>()
             value.participants = []
             value.RoomId = undefined
             value.isMuted = true
@@ -227,5 +242,37 @@ export class CallService {
 
             return value
         });
+    }
+
+    async toggleScreenShare() {
+        const instance = get(this.instance)
+        if (!instance.call) {
+            alert('You are not in a call')
+            return
+        }
+        if (!instance.isScreenSharing) {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+            })
+            this.instance.update((call) => {
+                call.localMediaStream.push({
+                    stream,
+                    type: 'screen',
+                    userId: call.peerConnection?.id,
+                })
+                call.isScreenSharing = !call.isScreenSharing
+                return call
+            });
+            return
+        }
+        this.instance.update((call) => {
+            const streamInfo = call.localMediaStream.find((streamInfo) => streamInfo.type === 'screen')
+            streamInfo?.stream.getTracks().forEach((track) => {
+                track.stop()
+            })
+            return call
+        });
+
+
     }
 }
