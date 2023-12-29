@@ -3,7 +3,7 @@
     import {Dish} from "./Dish";
     import {ActionIcon} from "@svelteuidev/core";
     import {type Writable, writable} from "svelte/store";
-    import VideoContainer from "@components/CallManager/VideoContainer.svelte";
+    import VideoContainer from "@components/Call/VideoContainer.svelte";
     let manager: HTMLDivElement;
     let count: number = 0;
     let containers: Writable<ContainerInfo[]> = writable([]);

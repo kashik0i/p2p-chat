@@ -8,6 +8,7 @@
     import type {Writable} from "svelte/store";
     import {writable} from "svelte/store";
 
+    const currentCall = $applicationStore.callService.currentCall;
     let conversations = $applicationStore.chatService.conversations;
     let currentConversationId = $applicationStore.chatService.currentConversationId;
     let currentUser = $applicationStore.userService.user;
@@ -23,7 +24,7 @@
 
 
 <MediaQuery query="(min-width: 600px)" styles={{ bc: '$blue50', d:"none" }}>
-    <div class="flex flex-col py-8  pr-2 h-full w-full max-w-fit  ">
+    <div class="flex flex-col py-8  pr-2  bg-white h-full w-full max-w-fit ">
         <div class="flex flex-row items-center h-12 w-full">
             <div
                     class="flex items-center w-10 rounded-full bg-indigo-500 flex-shrink-0 ml-4"
@@ -55,7 +56,7 @@
 </MediaQuery>
 <!-- Small screen -->
 <MediaQuery query="(max-width: 600px)" styles={{ bc: '$blue50', d:"none" }}>
-    <div class="flex flex-col py-8  p-2   h-full w-full max-w-fit ">
+    <div class="flex flex-col py-8  pr-2  bg-white h-full w-full max-w-fit ">
         <div class="flex flex-row items-center justify-center h-12 w-full">
             <div
                     class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0"

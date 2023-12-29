@@ -42,7 +42,7 @@ export class User {
     // };
     // phone: string;
     // cell: string;
-    id:string;
+    id: string;
     // picture: {
     //     large: string;
     //     medium: string;
@@ -51,10 +51,24 @@ export class User {
     // nat: string;
     avatar: string;
     peerId: string = '';
-    constructor(data: { name: { last: string; first: string }; id: string; avatar: string }) {
+    online: boolean = false;
+
+    constructor(data: {
+        name: { last: string; first: string };
+        id: string;
+        avatar: string,
+        peerId?: string,
+        online?: boolean
+    }) {
         this.name = data.name;
         this.id = data.id;
         this.avatar = data.avatar;
+        this.peerId = data.peerId || '';
+        this.online = data.online || false;
+    }
+
+    get fullName() {
+        return `${this.name.first} ${this.name.last}`;
     }
 }
 

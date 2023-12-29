@@ -6,4 +6,5 @@ export enum CallStateEnum {
     Answered = 'Answered',
     Ended = 'Ended',
     Error = 'Error',
+    Busy = 'Busy'
 }

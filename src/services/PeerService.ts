@@ -1,46 +1,18 @@
 import {joinRoom, selfId} from 'trystero'
-import type {Room, ActionSender, ActionReceiver, ActionProgress} from 'trystero'
+import type {Room} from 'trystero'
 import type {Message} from "@/interfaces/Message";
-// import {EventEmitter} from "events";
 import EventEmitter from 'eventemitter3'
-import type {Writable} from "svelte/store";
-import {get, writable} from "svelte/store";
 import type {User} from "@/interfaces/User";
-import {applicationStore} from "@stores/applicationStore";
+import type {PeerActions, PeerEvent} from "@/interfaces/Trystero";
+import type {CallData, PeerCall} from "@/interfaces/CallService";
+import type {CallRequest} from "@/interfaces/CallService/CallRequest";
 
-interface Action<T> {
-    send: ActionSender<T>
-    receive: ActionReceiver<T>
-    progress: ActionProgress
-}
-
-interface PeerEvents {
-    join: (peerId: string) => void
-    user: (user: User) => void
-
-    leave: (peerId: string) => void
-    stream: (stream: MediaStream, peerId: string) => void
-    message: (message: Message) => void,
-    file: (file: File,peerId:string,metadata:Message) => void,
-    error: (error: Error) => void
-
-    typing: (peerId: string) => void
-    stoppedTyping: (peerId: string) => void
-}
-
-interface PeerActions {
-    message: Action<Message>
-    user: Action<User>
-    file: Action<File>
-    // stream: Action<MediaStream>
-}
 
 export class PeerService {
     selfId = selfId
     instance: Room
     actions: PeerActions;
-    ee: EventEmitter<PeerEvents> = new EventEmitter<PeerEvents>()
-    peers: Writable<Map<string, User>> = writable(new Map<string, User>())
+    ee: EventEmitter<PeerEvent, this> = new EventEmitter<PeerEvent, this>()
 
     constructor() {
         const config = {
@@ -69,34 +41,32 @@ export class PeerService {
                         "credential": "RumGyEc481RXhlDS"
                     }]
             },
-            trackerUrls : import.meta.env?.VITE_TRACKER_LIST?.split(',')
+            trackerUrls: import.meta.env?.VITE_TRACKER_LIST?.split(',')
         }
         this.instance = joinRoom(config, "default")
+
         this.instance.onPeerJoin(async (peerId) => {
             console.log('peer joined', peerId)
-            //send user info
-            const currentUser = get(get(applicationStore).userService.user)
-            await this.actions.user.send(currentUser)
             this.ee.emit('join', peerId)
-            // this.peers.update((peers) => {
-            //     peers.set(peerId, {} as User)
-            //     return peers
-            // })
         })
         this.instance.onPeerLeave((peer) => {
             console.log('peer left', peer)
             this.ee.emit('leave', peer)
-            this.peers.update((peers) => {
-                peers.delete(peer)
-                return peers
-            })
         })
-        // this.instance.onPeerStream(
-        //     (stream, peerId) => (peerElements[peerId].video.srcObject = stream)
-        // )
+        this.instance.onPeerStream((stream, peerId, metadata) => {
+            // @ts-ignore
+            this.ee.emit('stream', stream, peerId, metadata)
+        })
+        this.instance.onPeerTrack((track,stream, peerId) => {
+            this.ee.emit('track', track, stream, peerId)
+        })
+
         const message = this.instance.makeAction<Message>('message')
         const user = this.instance.makeAction<User>('user')
-        const file = this.instance.makeAction<File>('file')
+        const file = this.instance.makeAction<Uint8Array>('file')
+        const call = this.instance.makeAction<CallRequest>('call')
+        const callData = this.instance.makeAction<CallData>('callData')
+
 
         this.actions = {
             message: {
@@ -113,24 +83,38 @@ export class PeerService {
                 send: file[0],
                 receive: file[1],
                 progress: file[2]
-            }
+            },
+            call: {
+                send: call[0],
+                receive: call[1],
+                progress: call[2]
+            },
+            callData: {
+                send: callData[0],
+                receive: callData[1],
+                progress: callData[2]
+            },
         }
         this.actions.message.receive((message) => {
             console.log('received message', message)
             this.ee.emit('message', message)
         });
         // @ts-ignore
-        this.actions.file.receive((file,peerId,metadata:Message) => {
+        this.actions.file.receive((file, peerId, metadata: Message) => {
             console.log('received file', file)
-            this.ee.emit('file', file,peerId,metadata)
+            this.ee.emit('file', file, peerId, metadata)
         });
         this.actions.user.receive((user) => {
             console.log('received user', user)
             this.ee.emit('user', user)
-            this.peers.update((peers) => {
-                peers.set(user.id, user)
-                return peers
-            })
+        });
+        this.actions.call.receive((call) => {
+            console.log('received call', call)
+            this.ee.emit('call', call)
+        });
+        this.actions.callData.receive((callData, peerId) => {
+            console.log('received callData', callData)
+            this.ee.emit('callData', callData, peerId)
         });
 
     }

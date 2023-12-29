@@ -4,7 +4,7 @@ import type {User} from "@/interfaces/User";
 export interface Chat {
     id: string
     messages: Message[]
-    users: Map<string,User>
+    users: User[]
     avatar: string
     name: string
 }

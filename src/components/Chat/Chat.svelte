@@ -11,24 +11,18 @@
     import FileModal from "@components/Modal/FileModal.svelte";
 
     let value = "";
-    let conversations: Map<string, Chat> = new Map<string, Chat>()
-    let currentConversationId: string | null = null;
     let currentUser = $applicationStore.userService.user;
+    let conversations = $applicationStore.chatService.conversations;
+    let currentConversationId = $applicationStore.chatService.currentConversationId;
+    $: currentConversation = $conversations.find((c) => c.id === $currentConversationId);
+
 
     let openCameraModal = false;
     let openFileModal = false;
 
     onMount(() => {
-        const conversationsUnsubscribe = $applicationStore.chatService.conversations.subscribe((c) => {
-            conversations = c;
-            console.log(c)
-        })
-        const currentConversationIdUnsubscribe = $applicationStore.chatService.currentConversationId.subscribe(id => {
-            currentConversationId = id
-        })
+
         return () => {
-            conversationsUnsubscribe();
-            currentConversationIdUnsubscribe();
         }
     });
 
@@ -37,7 +31,7 @@
             alert("Select a conversation first");
             return;
         }
-        $applicationStore.send(value, currentConversationId);
+        $applicationStore.send(value, $currentConversationId);
         value = "";
     }
 
@@ -66,7 +60,7 @@
             return;
         }
         openCameraModal = false;
-        $applicationStore.sendFile(e.detail.file,e.detail.type, currentConversationId);
+        $applicationStore.sendFile(e.detail.file,e.detail.type, $currentConversationId);
     }
 
     function handleUpload(e){
@@ -75,8 +69,9 @@
             return;
         }
         openFileModal = false;
-        $applicationStore.sendFile(e.detail.file,e.detail.type, currentConversationId);
+        $applicationStore.sendFile(e.detail.file,e.detail.type,$currentConversationId);
     }
+
 
 
 
@@ -87,7 +82,7 @@
         <div class="flex flex-col h-full overflow-x-auto mb-4">
             <div class="flex flex-col h-full">
                 <div class="grid grid-cols-12 gap-y-2">
-                    {#if currentConversationId === null}
+                    {#if $currentConversationId === null}
                         <div class="col-span-12">
                             <div class="flex flex-col justify-center items-center h-full">
                                 <div class=" text-xl font-medium">
@@ -96,7 +91,7 @@
                             </div>
                         </div>
                     {:else}
-                        {#each conversations.get(currentConversationId)?.messages as message}
+                        {#each currentConversation?.messages as message}
                             <div class="col-span-12">
                                 <Message
                                         seen={true}

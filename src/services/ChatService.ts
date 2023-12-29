@@ -1,6 +1,6 @@
 import type {Message} from "@/interfaces/Message";
-import type {Writable} from "svelte/store";
-import {get, writable} from "svelte/store";
+import type {Readable} from "svelte/store";
+import {get, readable, writable} from "svelte/store";
 import type {User} from "@/interfaces/User";
 import type {Chat} from "@/interfaces/Chat";
 import {MessageTypeEnum} from "@/enums/MessageTypeEnum";
@@ -9,27 +9,40 @@ import demoAudio from "@assets/demo.mp3";
 import demoImage from "@assets/svelte.svg";
 
 export class ChatService {
-    public conversations: Writable<Map<string, Chat>> = writable(new Map<string, Chat>())
-    public currentConversationId: Writable<string | null> = writable<string | null>(null)
-    public users = writable<User[]>([])
+    public conversations = writable<Chat[]>([])
+    public currentConversationId = writable<string | null>(null)
 
     constructor() {
         console.log('ChatService constructor')
-        const messages = this.seedMessages()
-        const globalChat: Chat = {
-            id: import.meta.env.VITE_GLOBAL_CHAT_ID,
-            messages: messages,
-            users: new Map<string, User>(),
-            avatar: '',
-            name: 'Global Chat'
-        }
-        this.conversations.update(conversations => conversations.set(globalChat.id, globalChat));
-        this.currentConversationId = writable(globalChat.id);
+        this.init()
+        this.conversations.subscribe(conversations => {
+            localStorage.setItem("conversations", JSON.stringify(conversations))
+        })
     }
 
-    getUserById(sender: string) {
-        return get(this.users).find(user => user.id.toString() === sender);
+    private init() {
+        const conversationString = localStorage.getItem("conversations")
+        if (!conversationString) {
+            const messages = this.seedMessages()
+            const globalChat: Chat = {
+                id: import.meta.env.VITE_GLOBAL_CHAT_ID,
+                messages: messages,
+                users: [],
+                avatar: '',
+                name: 'Global Chat'
+            }
+            const conversations = [globalChat]
+            this.conversations.set(conversations);
+            this.currentConversationId.set(globalChat.id)
+            localStorage.setItem("conversations", JSON.stringify(conversations))
+
+            return;
+        }
+
+        const conversations = JSON.parse(conversationString)
+        this.conversations.set(conversations);
     }
+
 
     selectConversation(index: string | null) {
         this.currentConversationId.set(index)
@@ -40,7 +53,7 @@ export class ChatService {
         const conversationId = message.conversationId
         if (conversationId === "" || conversationId === undefined) return;
         this.conversations.update(conversations => {
-            const conversation = conversations.get(conversationId);
+            const conversation = conversations.find(conversation => conversation.id = conversationId);
             if (conversation === null || conversation === undefined) {
                 console.log("conversation doesn't exist")
                 return conversations;
@@ -50,13 +63,11 @@ export class ChatService {
         })
     }
 
-    getUsersByConversationId(id: string) {
-        const conversation = get(this.conversations).get(id)
-        if (conversation === undefined) return;
-        return [...conversation.users.values()]
+    getUsersByConversationId(conversationId: string) {
+        return get(this.conversations).find(conversation => conversation.id = conversationId)?.users
     }
 
-    private seedMessages():Message[] {
+    private seedMessages(): Message[] {
         const audioFile = new File([''], 'audio.mp3', {type: 'audio/mp3'});
         const audioUrl = URL.createObjectURL(audioFile);
 
@@ -76,7 +87,7 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: 'Hello World',
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.TEXT
+                type: MessageTypeEnum.TEXT
             },
             {
                 id: '2',
@@ -84,7 +95,7 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoAudio,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.AUDIO,
+                type: MessageTypeEnum.AUDIO,
                 metadata: {
                     name: 'audio.mp3',
                     size: 0,
@@ -97,7 +108,7 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoVideo,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.VIDEO,
+                type: MessageTypeEnum.VIDEO,
                 metadata: {
                     name: 'video.mp4',
                     size: 0,
@@ -110,7 +121,7 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: demoImage,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.IMAGE,
+                type: MessageTypeEnum.IMAGE,
                 metadata: {
                     name: 'image.png',
                     size: 0,
@@ -123,7 +134,7 @@ export class ChatService {
                 conversationId: import.meta.env.VITE_GLOBAL_CHAT_ID,
                 content: fileUrl,
                 timestamp: new Date().getTime(),
-                type:MessageTypeEnum.FILE,
+                type: MessageTypeEnum.FILE,
                 metadata: {
                     name: 'file.test',
                     size: 0,
@@ -132,5 +143,10 @@ export class ChatService {
             }
 
         ]
+    }
+
+
+    getConversationById(id: string) {
+        return get(this.conversations).find(conversation => conversation.id === id)
     }
 }

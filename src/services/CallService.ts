@@ -1,278 +1,401 @@
-import Peer from "peerjs";
+import {get, writable, type Writable} from "svelte/store";
 import {CallStateEnum} from "@/enums/CallStateEnum";
-import type {PeerCall} from "@/interfaces/PeerCall";
-import {get, type Writable, writable} from "svelte/store";
+import {guid} from "@/utils";
 import type {User} from "@/interfaces/User";
+import type {PeerCall} from "@/interfaces/CallService";
 import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
+import type {CallParticipant} from "@/interfaces/CallService/CallParticipant";
+import type {CallRequest} from "@/interfaces/CallService/CallRequest";
+import EventEmitter from "eventemitter3";
+
+export interface CallEvent {
+    streamAdded: (stream: MediaStreamInfo) => void
+    streamRemoved: (stream: MediaStreamInfo) => void
+    trackAdded: (track: MediaStreamTrack, stream: MediaStream) => void
+    trackRemoved: (track: MediaStreamTrack, stream: MediaStream) => void
+}
+
 
 export class CallService {
-    instance: Writable<PeerCall> = writable()
+    currentCall: Writable<PeerCall | null> = writable(null)
+    ee: EventEmitter<CallEvent, this> = new EventEmitter<CallEvent, this>()
+    callLog = writable<PeerCall[]>()
 
-    constructor(user: User) {
-        const peer = new Peer(user.id, {
-            // debug: 3,
-            // host: 'localhost',
-            // port: 9000,
-            // path: '/peerjs',
-            config: {
-                iceServers: [
-                    {"urls": "stun:stun.relay.metered.ca:80"},
-                    {
-                        "urls": "turn:a.relay.metered.ca:80",
-                        "username": "7f6092c5939e54e19d54ce06",
-                        "credential": "RumGyEc481RXhlDS"
-                    },
-                    {
-                        "urls": "turn:a.relay.metered.ca:80?transport=tcp",
-                        "username": "7f6092c5939e54e19d54ce06",
-                        "credential": "RumGyEc481RXhlDS"
-                    },
-                    {
-                        "urls": "turn:a.relay.metered.ca:443",
-                        "username": "7f6092c5939e54e19d54ce06",
-                        "credential": "RumGyEc481RXhlDS"
-                    },
-                    {
-                        "urls": "turn:a.relay.metered.ca:443?transport=tcp",
-                        "username": "7f6092c5939e54e19d54ce06",
-                        "credential": "RumGyEc481RXhlDS"
-                    }
-                ]
+    constructor() {
+        console.log('CallService constructor')
+        this.init()
+        this.currentCall.subscribe((call) => {
+            if (!call) {
+                localStorage.setItem('currentCall', JSON.stringify(null))
+                return
             }
-        })
-        peer.on('open', (id) => {
-            console.log('My peer ID is: ' + id);
-        })
-        peer.on('connection', (conn) => {
-            conn.on('data', (data) => {
-                // Will print 'hi!'
-                console.log(data);
-            });
-        })
-        peer.on('call', async (call) => {
-            console.log('received call', call)
-            this.instance.update((value) => {
-                value.call = call
-                value.state = CallStateEnum.Incoming
-                return value
-            });
-
-            //TODO ask user to accept call and send ringing state
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: true
-            })
-            call.answer(stream)
-            this.instance.update((value) => {
-                value.localMediaStream.push({
-                    stream,
-                    type: 'camera',
-                    userId: user.id,
-                })
-                value.state = CallStateEnum.Answered
-                return value
-            });
-            call.on('stream', (stream) => {
-                console.log('got stream')
-                const streamInfo: MediaStreamInfo = {
-                    stream,
-                    userId: call.peer,
-                    type: 'camera',
-                }
-                this.handleStream(streamInfo)
-            })
-            call.on('close', () => {
-                console.log('call closed')
-                this.endCall()
-            })
-        })
-        this.instance.set({
-            peerConnection: peer,
-            call: null,
-            state: CallStateEnum.Idle,
-            isMuted: true,
-            isCameraOff: true,
-            isScreenSharing: true,
-            participants: [],
-            RoomId: undefined,
-            localMediaStream: [],
-            remoteMediaStream: new Map<string, MediaStreamInfo[]>(),
-        })
-
-    }
-
-    async callUser(userId: string) {
-        const instance = get(this.instance)
-
-        if (instance.peerConnection === null) {
-            throw new Error('Peer instance is null')
-        }
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true,
-        })
-        // if (instance.isMuted) {
-        //     mediaStream.getAudioTracks().forEach((track) => {
-        //         track.enabled = false
-        //     })
-        // }
-        // if (instance.isCameraOff) {
-        //     mediaStream.getVideoTracks().forEach((track) => {
-        //         track.enabled = false
-        //     })
-        // }
-
-        const peerCall = instance.peerConnection.call(userId, mediaStream, {
-            metadata: {
-                userId: instance.peerConnection.id,
-                //TODO add roomId, conversationId, avatar
-            }
-        })
-
-        peerCall.on('stream', (stream) => {
-            console.log('got stream', stream, userId)
-            const streamInfo: MediaStreamInfo = {
-                stream,
-                userId,
-                type: 'camera',
-            }
-            this.handleStream(streamInfo)
-        })
-        const streamInfo: MediaStreamInfo = {
-            stream: mediaStream,
-            userId: instance.peerConnection.id,
-            type: 'camera',
-        }
-        this.instance.update((call) => {
-            call = {
+            const participants = get(call?.participants)
+            localStorage.setItem('currentCall', JSON.stringify({
                 ...call,
-                call: peerCall,
-                localMediaStream: [streamInfo],
-                state: CallStateEnum.Outgoing,
-                participants: [userId],
+                participants: participants.map(participant => ({
+                    ...participant,
+                    stream: [],
+                }))
+            }))
+        })
+        // this.callLog.subscribe((callLog) => {
+        //     localStorage.setItem('callLog', JSON.stringify(callLog))
+        // })
+
+    }
+
+    updateParticipantState(state: CallStateEnum, userId: string) {
+        console.log('updateParticipantState', state, userId)
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
             }
-
-            return call
-        });
-    }
-
-    handleStream(streamInfo: MediaStreamInfo) {
-        const userId = streamInfo.userId
-        this.instance.update((call) => {
-            // call.localMediaStream.push(streamInfo)
-            call.remoteMediaStream.set(userId, [streamInfo])
-            return call;
-            if (call.remoteMediaStream.has(userId)) {
-                call.remoteMediaStream.get(userId)?.push(streamInfo)
-            } else {
-                call.remoteMediaStream.set(userId, [streamInfo])
-            }
-            return call
-        });
-    }
-
-    toggleMute() {
-        this.instance.update((instance) => {
-            instance.isMuted = !instance.isMuted
-            instance.localMediaStream.forEach((streamInfo) => {
-                streamInfo.stream.getAudioTracks().forEach((track) => {
-                    track.enabled = !track.enabled
-                })
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === userId)
+                if (!participant) {
+                    return participants
+                }
+                participant.status = state
+                return participants
             })
-            return instance
-        });
-
-    }
-
-    toggleCamera() {
-        this.instance.update((value) => {
-            value.isCameraOff = !value.isCameraOff
-            value.localMediaStream.forEach((streamInfo) => {
-                streamInfo.stream.getVideoTracks().forEach((track) => {
-                    track.enabled = !track.enabled
-                })
-            })
-            return value
-        });
-    }
-
-    toggleScreenSharing() {
-        this.instance.update((value) => {
-            value.isScreenSharing = !value.isScreenSharing
-            return value
-        });
-    }
-
-    async toggleCall(calleeId: string) {
-        const instance = get(this.instance)
-        if (instance.call) {
-            instance.call.close()
-            instance.state = CallStateEnum.Idle
-            return
-        }
-        if (instance.state !== CallStateEnum.Idle) {
-            alert('You are already in a call')
-        }
-        if (!calleeId) {
-            alert('Please select a user')
-            return
-        }
-        await this.callUser(calleeId)
+            return call
+        })
     }
 
     endCall() {
-        this.instance.update((value) => {
-            value?.call?.close()
-
-            value.call = null
-            value.state = CallStateEnum.Idle
-            //TODO release local and remote streams
-            value.localMediaStream.forEach((streamInfo) => {
-                streamInfo.stream.getTracks().forEach((track) => {
-                    track.stop()
+        this.currentCall.update(call => {
+            call?.participants.update(participants => {
+                participants.forEach(participant => {
+                    participant.stream.forEach(({stream}) => {
+                        stream.getTracks().forEach(track => {
+                            track.stop()
+                        })
+                    })
                 })
+                return []
             })
-            value.localMediaStream = []
-            value.remoteMediaStream = new Map<string, MediaStreamInfo[]>()
-            value.participants = []
-            value.RoomId = undefined
-            value.isMuted = true
-            value.isCameraOff = true
-            value.isScreenSharing = false
+            return null
+        })
 
-            return value
-        });
     }
 
-    async toggleScreenShare() {
-        const instance = get(this.instance)
-        if (!instance.call) {
-            alert('You are not in a call')
-            return
-        }
-        if (!instance.isScreenSharing) {
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-            })
-            this.instance.update((call) => {
-                call.localMediaStream.push({
-                    stream,
-                    type: 'screen',
-                    userId: call.peerConnection?.id,
-                })
-                call.isScreenSharing = !call.isScreenSharing
+    dropUserFromCall(senderId: string) {
+        console.log('dropUserFromCall', senderId)
+        this.currentCall.update((call) => {
+            if (!call) {
                 return call
-            });
-            return
-        }
-        this.instance.update((call) => {
-            const streamInfo = call.localMediaStream.find((streamInfo) => streamInfo.type === 'screen')
-            streamInfo?.stream.getTracks().forEach((track) => {
-                track.stop()
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === senderId)
+                if (!participant) {
+                    return participants
+                }
+                participant.stream.forEach(({stream}) => {
+                    stream.getTracks().forEach(track => {
+                        track.stop()
+                    })
+                })
+                return participants.filter(participant => participant.id !== senderId)
             })
             return call
-        });
+        })
+    }
+
+    async createCall(currentUser: User, participants: User[], conversationId: string = "", isGroupCall: boolean = false) {
+        // const currentCallLog = get(this.callLog)
+
+        this.currentCall.update((currentCall) => {
+            if (currentCall) {
+                throw new Error('Call already exists')
+            }
+            return {
+                id: guid(),
+                callerId: currentUser.id,
+                participants: writable(participants.map(participant => ({
+                    id: participant.id,
+                    //TODO ringing is not correct status, change to idle
+                    status: participant.id === currentUser.id && isGroupCall ? CallStateEnum.Answered : CallStateEnum.Ringing,
+                    peerId: participant.peerId,
+                    stream: [],
+                    isMuted: true,
+                    isCameraOff: true,
+                }))) as Writable<CallParticipant[]>,
+                state: isGroupCall ? CallStateEnum.Answered : CallStateEnum.Outgoing,
+                metadata: {
+                    conversationId: conversationId,
+                    avatar: currentUser.avatar,
+                },
+            } as PeerCall
+        })
+    }
+
+    startCall() {
+        //TODO add call to call log
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.state = CallStateEnum.Answered
+            return call
+        })
+    }
+
+    private init() {
+        this.currentCall.update((call) => {
+            const currentCall = localStorage.getItem('currentCall')
+            if (!currentCall) {
+                return null
+            }
+            const callFromStorage = JSON.parse(currentCall)
+            if (!callFromStorage) {
+                return null
+            }
+            return {
+                ...callFromStorage,
+                participants: writable(callFromStorage.participants),
+            } as PeerCall
+        })
+    }
+
+    getUserStream(id: string) {
+        const currentCall = get(this.currentCall)
+        if (!currentCall) {
+            return undefined
+        }
+        return get(currentCall.participants).find(participant => participant.id === id)?.stream
+    }
+
+    createCallRequest(call: PeerCall) {
+        const participants = get(call.participants)
+        return {
+            id: call.id,
+            callerId: call.callerId,
+            participants: participants,
+            metadata: call.metadata,
+        } as CallRequest
+
+    }
+
+    getParticipants() {
+        const currentCall = get(this.currentCall)
+        if (!currentCall) {
+            return []
+        }
+        return get(currentCall.participants)
+    }
+
+    addStreamToParticipant(userId: string, stream: MediaStreamInfo) {
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === userId)
+                if (!participant) {
+                    return participants
+                }
+                participant.stream.push(stream)
+                return participants
+            })
+            return call
+        })
+    }
+
+    removeStreamFromParticipant(userId: string, streamInfo: MediaStreamInfo) {
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === userId)
+                if (!participant) {
+                    return participants
+                }
+                participant.stream = participant.stream.filter(stream => stream.type !== streamInfo.type)
+                return participants
+            })
+            return call
+        })
+    }
+
+    addTrackToParticipantStream(userId: string, mediaStream: MediaStream, track: MediaStreamTrack) {
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === userId)
+                if (!participant) {
+                    return participants
+                }
+                const stream = participant.stream.find(({stream}) => stream.id === mediaStream.id)
+                if (!stream) {
+                    console.info('stream not found')
+                    return participants
+                }
+                stream.stream.addTrack(track)
+                return participants
+            })
+            return call
+        })
+    }
+
+    removeTrackFromParticipantStream(userId: string, streamInfo: MediaStreamInfo, track: MediaStreamTrack) {
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === userId)
+                if (!participant) {
+                    return participants
+                }
+                const stream = participant.stream.find(stream => stream.type === streamInfo.type)
+                if (!stream) {
+                    return participants
+                }
+                stream.stream.removeTrack(track)
+                return participants
+            })
+            return call
+        })
+    }
 
 
+    async toggleVoice(user: User, isCurrentUser: boolean = false) {
+        const currentCall = get(this.currentCall)
+        if (!currentCall) {
+            return
+        }
+        const participants = get(currentCall.participants)
+        const participant = participants.find(participant => participant.id === user.id)
+        if (!participant) {
+            return
+        }
+        let streamInfo = participant.stream.find(stream => stream.type === 'camera')
+
+        if (isCurrentUser) {
+            if (!streamInfo) {
+                //add stream to participant
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true,
+                })
+                streamInfo = {
+                    type: 'camera',
+                    userId: user.id,
+                    stream: stream,
+                } as MediaStreamInfo
+                this.addStreamToParticipant(user.id, streamInfo)
+                this.ee.emit("streamAdded", streamInfo)
+            }
+            // else if (streamInfo.stream.getAudioTracks().length === 0) {
+            //     const stream = await navigator.mediaDevices.getUserMedia({
+            //         video: !participant.isCameraOff,
+            //         audio: true,
+            //     })
+            //     streamInfo = {
+            //         type: 'camera',
+            //         userId: user.id,
+            //         stream: stream,
+            //     } as MediaStreamInfo
+            //     const audioTrack = streamInfo.stream.getAudioTracks()[0]
+            //     this.addTrackToParticipantStream(user.id, stream, audioTrack)
+            //     this.ee.emit("trackAdded", audioTrack, stream)
+            // }
+        }
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === user.id)
+                if (!participant) {
+                    return participants
+                }
+                participant.isMuted = !participant.isMuted
+                return participants
+            })
+            return call
+        })
+        if (!streamInfo) {
+            console.log('no audio track')
+            return
+        }
+        streamInfo.stream.getTracks().forEach(track => {
+            if (track.kind === 'video') {
+                track.enabled = !participant.isCameraOff
+            } else if (track.kind === 'audio') {
+                track.enabled = !participant.isMuted
+            }
+        })
+    }
+
+    async toggleVideo(user: User, isCurrentUser: boolean = false) {
+        const currentCall = get(this.currentCall)
+        if (!currentCall) {
+            return
+        }
+        const participants = get(currentCall.participants)
+        const participant = participants.find(participant => participant.id === user.id)
+        if (!participant) {
+            return
+        }
+        let streamInfo = participant.stream.find(stream => stream.type === 'camera')
+        if (isCurrentUser) {
+            if (!streamInfo) {
+                //add stream to participant
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true,
+                })
+                streamInfo = {
+                    type: 'camera',
+                    userId: user.id,
+                    stream: stream,
+                } as MediaStreamInfo
+                this.addStreamToParticipant(user.id, streamInfo)
+                this.ee.emit("streamAdded", streamInfo)
+            }
+            // else if (streamInfo.stream.getVideoTracks().length === 0) {
+            //     const stream = await navigator.mediaDevices.getUserMedia({
+            //         video: true,
+            //         audio: !participant.isMuted,
+            //     })
+            //     streamInfo = {
+            //         type: 'camera',
+            //         userId: user.id,
+            //         stream: stream,
+            //     } as MediaStreamInfo
+            //     const videoTrack = streamInfo.stream.getVideoTracks()[0]
+            //     this.addTrackToParticipantStream(user.id, streamInfo.stream, videoTrack)
+            //     this.ee.emit("trackAdded", videoTrack, stream)
+            // }
+        }
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === user.id)
+                if (!participant) {
+                    return participants
+                }
+                participant.isCameraOff = !participant.isCameraOff
+                return participants
+            })
+            return call
+        })
+        if (!streamInfo) {
+            console.log('no video track')
+            return
+        }
+        streamInfo.stream.getTracks().forEach(track => {
+            if (track.kind === 'video') {
+                track.enabled = !participant.isCameraOff
+            } else if (track.kind === 'audio') {
+                track.enabled = !participant.isMuted
+            }
+        })
     }
 }

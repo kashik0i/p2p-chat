@@ -1,34 +1,27 @@
 <script lang="ts">
     import {onMount} from "svelte";
+    import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
 
     export let name: 'container'
     export let stream: MediaStream | null = null
     export let muted = true
     export let video: HTMLVideoElement
-
     onMount(() => {
         if (stream) {
             video.srcObject = stream
-            video.muted = muted
         }
     })
 
+
 </script>
-
-<div class="container">
-    <h1>{name}</h1>
-    <video bind:this={video} autoplay></video>
-</div>
-
+    <video bind:this={video} bind:muted autoplay></video>
 
 <style>
-    .container {
+    video {
         width: 100%;
         height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        object-fit: cover;
     }
+
 </style>
 

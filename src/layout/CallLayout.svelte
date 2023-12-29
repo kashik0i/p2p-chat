@@ -1,68 +1,35 @@
 <script lang="ts">
-    import VideoCallManager from "@components/CallManager/VideoCallManager.svelte";
-    import {onMount} from "svelte";
-    import {applicationStore} from "@stores/applicationStore.js";
-    import {ActionIcon, NativeSelect} from "@svelteuidev/core";
-    import type {User} from "@/interfaces/User";
-    import {get} from "svelte/store";
-    import VideoContainer from "@components/CallManager/VideoContainer.svelte";
-    import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
-    import Controls from "@components/CallManager/Controls.svelte";
+    import {
+        colorScheme, Container, Flex,
+        Footer,
+        Header, Menu,
+        Navbar,
+        Tabs
+    } from "@svelteuidev/core";
+    import {applicationStore} from "@stores/applicationStore";
+    import Call from "@components/Call/Call.svelte";
+    import CallSideMenu from "@components/Call/CallSideMenu.svelte";
 
-    let videoManager: typeof VideoCallManager;
 
-    let currentCall;
-    let calleeId;
-    let users = new Map<string, User>();
-    let userStreams: MediaStream[] = [];
-    let remoteStreams: Map<string,  MediaStreamInfo[]> = new Map<string,  MediaStreamInfo[]>();
-    onMount(() => {
-        let usersUnsubscribe = $applicationStore.peerService.peers.subscribe(call => {
-            console.log(call)
-            users = call;
-        })
-        let currentCallUnsubscribe = $applicationStore.callService.instance.subscribe(call => {
-            userStreams = call.localMediaStream.map(stream => stream.stream);
-            remoteStreams = call.remoteMediaStream;
-            currentCall = call;
-        })
+    let opened = false;
 
-        return () => {
-            currentCallUnsubscribe();
-            usersUnsubscribe();
-        }
-    })
-
-    async function call() {
-        if (!calleeId) {
-            alert('Please select a user to call');
-            return;
-        }
-
-        await $applicationStore.callService.callUser(calleeId);
-
+    function toggleTheme() {
+        colorScheme.update((v) => (v === 'light' ? 'dark' : 'light'));
     }
 
-
+    function toggleAside() {
+        opened = !opened;
+    }
 </script>
 
-<div class="flex flex-col items-center w-full h-full">
-    <VideoCallManager bind:this={videoManager}>
-        {#each userStreams as stream}
-            <VideoContainer
-                    bind:stream={stream}
-                    muted={true}
-            />
-        {/each}
-        {#each [...remoteStreams.values()] as streamInfo}
-            <VideoContainer
-                    bind:stream={streamInfo.stream}
-                    muted={false}
-            />
-        {/each}
-    </VideoCallManager>
-    <div class="h-16">
-        <Controls/>
+<div class="flex flex-col w-full h-full antialiased text-gray-800">
+    <div class="flex flex-row h-full w-full">
+<!--        <CallSideMenu/>-->
+        <Call/>
     </div>
-    <!--    <VideoCallManager bind:this={videoManager}/>-->
 </div>
+
+
+
+
+
