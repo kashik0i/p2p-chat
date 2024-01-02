@@ -4,7 +4,7 @@
     import CallGridManager from "@components/Call/CallGrid/CallGridManager.svelte";
 
     let users = $applicationStore.users
-    const handleToggleCamera = ({detail:user}) => {
+    const handleToggleCamera = ({detail: user}) => {
         $applicationStore.toggleCamera(user)
     };
     const handleToggleAudio = (user: User) => {
@@ -15,5 +15,7 @@
     $: participants = $currentCall?.participants
 
 </script>
-<CallGridManager participants={$participants} on:video={handleToggleCamera} on:audio={handleToggleAudio}/>
+<CallGridManager participants={$participants}
+                 on:video={handleToggleCamera} on:audio={handleToggleAudio}
+/>
 

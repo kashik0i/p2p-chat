@@ -75,36 +75,39 @@
 
 
 </script>
-<div class="flex flex-col w-full  h-full overflow-auto mb-4">
-    <div class="flex flex-col h-full">
-        <div class="grid grid-cols-12 gap-y-2">
-            {#if !currentConversationId}
-                <div class="col-span-12">
-                    <div class="flex flex-col justify-center items-center h-full">
-                        <div class=" text-xl font-medium">
-                            Select a conversation
+<div class="flex flex-col w-full h-full">
+    <div class="flex flex-col w-full h-full overflow-auto mb-4">
+        <div class="flex flex-col h-full">
+            <div class="grid grid-cols-12 gap-y-2">
+                {#if !currentConversationId}
+                    <div class="col-span-12">
+                        <div class="flex flex-col justify-center items-center h-full">
+                            <div class=" text-xl font-medium">
+                                Select a conversation
+                            </div>
                         </div>
                     </div>
-                </div>
-            {:else}
-                {#each currentConversation?.messages as message}
-                    <div class="col-span-12">
-                        <Message
-                                seen={true}
-                                isSelf={message.senderId === $currentUser.id.toString()}
-                                message={message}
-                        />
-                    </div>
-                {/each}
-            {/if}
+                {:else}
+                    {#each currentConversation?.messages as message}
+                        <div class="col-span-12">
+                            <Message
+                                    seen={true}
+                                    isSelf={message.senderId === $currentUser.id.toString()}
+                                    message={message}
+                            />
+                        </div>
+                    {/each}
+                {/if}
+            </div>
         </div>
     </div>
+    <div class="flex flex-row items-center h-16 rounded-xl w-full px-4">
+        <AttachmentButton on:upload={handleOpenModal}/>
+        <ChatInput on:keydown={handleEnter} bind:value/>
+        <SendButton on:click={handleSend}/>
+    </div>
 </div>
-<div class="flex flex-row items-center h-16 rounded-xl w-full px-4">
-    <AttachmentButton on:upload={handleOpenModal}/>
-    <ChatInput on:keydown={handleEnter} bind:value/>
-    <SendButton on:click={handleSend}/>
-</div>
+
 
 <Modal bind:opened={openCameraModal} withCloseButton={true} closeOnClickOutside title="Capture Image"
        on:close={() => openCameraModal = false}>

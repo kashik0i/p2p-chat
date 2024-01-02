@@ -5,7 +5,6 @@
     import type {CallParticipant} from "@/interfaces/CallService/CallParticipant";
     import {applicationStore} from "@stores/applicationStore";
     import CallGridItem from "@components/Call/CallGrid/CallGridItem.svelte";
-
     const options = {
         maxRatio: 3 / 2,             // The narrowest ratio that will be used (default 2x3)
         minRatio: 9 / 16,            // The widest ratio that will be used (default 16x9)
@@ -53,17 +52,14 @@
         const unsubscribe = size.subscribe((_) => {
             layout.layout();
         });
+        $applicationStore.callService.layout =layout
         return () => {
             unsubscribe();
         }
     });
     let users = $applicationStore.users
     $: currentUser = $applicationStore.userService.user
-
-    let count = 0;
-    $: count = participants.length
 </script>
-
 <!--<button on:click={()=>layout.layout()}>layout</button>-->
 <div bind:this={layoutElement} class="layoutContainer p-2 m-2">
     {#each participantsFlat as {user, stream, isMuted, isCameraOff, status}}
