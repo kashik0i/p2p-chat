@@ -20,7 +20,7 @@
 </script>
 <div>
     <div class="w-full h-full">
-        {#if streamInfo?.stream && !isCameraOff}
+        {#if streamInfo?.stream}
             <VideoContainer stream={streamInfo.stream} muted={isMuted}/>
         {:else}
             <img class="w-full h-full object-cover" src={user?.avatar} alt={user?.name}/>

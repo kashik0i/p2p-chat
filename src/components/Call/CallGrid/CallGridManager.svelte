@@ -5,6 +5,7 @@
     import type {CallParticipant} from "@/interfaces/CallService/CallParticipant";
     import {applicationStore} from "@stores/applicationStore";
     import CallGridItem from "@components/Call/CallGrid/CallGridItem.svelte";
+
     const options = {
         maxRatio: 3 / 2,             // The narrowest ratio that will be used (default 2x3)
         minRatio: 9 / 16,            // The widest ratio that will be used (default 16x9)
@@ -40,7 +41,7 @@
     $: participantsFlat = participants?.flatMap(({id, stream, isMuted, isCameraOff, status}) => {
         const user = $users.find(u => u.id === id)
         if (!stream.length) return {user, undefined, isMuted, isCameraOff, status}
-        return stream.map(stream=>({user, stream, isMuted, isCameraOff, status}))
+        return stream.map(stream => ({user, stream, isMuted, isCameraOff, status}))
     }) ?? []
     afterUpdate(() => {
         layout.layout();
@@ -52,22 +53,23 @@
         const unsubscribe = size.subscribe((_) => {
             layout.layout();
         });
-        $applicationStore.callService.layout =layout
+        $applicationStore.callService.layout = layout
         return () => {
             unsubscribe();
         }
     });
     let users = $applicationStore.users
-    let currentUser=$applicationStore.userService.user
+    let currentUser = $applicationStore.userService.user
 
-    const isCurrentUser=(user)=>user.id===$currentUser.id
+    const isCurrentUser = (user) => user.id === $currentUser.id
 </script>
 <!--<button on:click={()=>layout.layout()}>layout</button>-->
 <div bind:this={layoutElement} class="layoutContainer p-2 m-2">
     {#each participantsFlat as {user, stream, isMuted, isCameraOff, status}}
-        <!--{JSON.stringify(stream)}-->
-        <CallGridItem streamInfo={stream} {user} {isCameraOff} isMuted={isMuted||isCurrentUser(user)}
-        on:video on:audio/>
+        {#if status === 'Answered'}
+            <CallGridItem streamInfo={stream} {user} {isCameraOff} isMuted={isMuted||isCurrentUser(user)} on:video
+                          on:audio/>
+        {/if}
     {/each}
 </div>
 

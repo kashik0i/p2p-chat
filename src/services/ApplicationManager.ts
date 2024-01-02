@@ -455,7 +455,6 @@ export class ApplicationManager {
         await this.peerService.actions.call.send(callRequest, peerIds)
         //send request to all participants, drop user if not answered in 30 seconds
         window.setTimeout(() => {
-            debugger
             const currentCall = get(this.callService.currentCall)
             if (!currentCall) {
                 return

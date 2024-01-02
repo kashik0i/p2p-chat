@@ -5,17 +5,18 @@
     import {onMount} from "svelte";
     import Slider from "@components/Controls/Slider.svelte";
     import type {PeerCall} from "@/interfaces/CallService";
-    import {derived, type Readable} from 'svelte/store';
+    import {derived, get, type Readable, type Writable} from 'svelte/store';
     import type {User} from "@/interfaces/User";
     import Avatar from "@components/Avatar.svelte";
     import type {Chat} from "@/interfaces/Chat";
+    import type {CallParticipant} from "@/interfaces/CallService/CallParticipant";
 
     let call: PeerCall | null = null;
     let volume = 50;
 
-    let isCameraOff = false;
-    let isScreenSharing = false;
-    let isMuted = false;
+    export let isCameraOff = false;
+    export let isScreenSharing = false;
+    export let isMuted = false;
     export let calleeId = '';
     type Contact = {
         id: string;
@@ -40,16 +41,19 @@
             avatar: conversation.avatar,
         }))),
     );
-    export let controls = {
-        // volume: 50,
-        isCameraOff: false,
-        isScreenSharing: false,
-        isMuted: false,
-    }
-
 
     const dispatch = createEventDispatcher();
     let currentUser = $applicationStore.userService.user;
+    let currentParticipant: Readable<CallParticipant | null> = derived(
+        [$applicationStore.callService.currentCall, $applicationStore.userService.user],
+        ([call, user], set) => {
+            if (call === null) {
+                set(null)
+                return
+            }
+            set(get(call.participants).find(participant => participant.id === user.id) ?? null)
+        }
+    )
     onMount(() => {
         const callUnsubscribe = $applicationStore.callService.currentCall.subscribe((_call) => {
             call = _call
@@ -66,6 +70,7 @@
     let onClose = () => {
         opened = false;
     }
+
     const handleToggleCamera = () => {
         $applicationStore.toggleCamera($currentUser)
         isCameraOff = !isCameraOff;
@@ -78,8 +83,13 @@
         $applicationStore.toggleVoice($currentUser)
         isMuted = !isMuted;
     }
+    $: isMuted= $currentParticipant?.isMuted ?? true;
+    $: isCameraOff= $currentParticipant?.isCameraOff ?? true;
 </script>
-<!--<pre>{JSON.stringify(controls)}</pre>-->
+<pre>{$currentParticipant?.isCameraOff}</pre>
+<pre>{$currentParticipant?.isMuted}</pre>
+<pre>{isCameraOff}</pre>
+<pre>{isMuted}</pre>
 <div class="flex flex-row m-2 p-2">
     <ActionIcon on:click={() => $applicationStore.toggleCall(calleeId)}>
         {#if call === null}
@@ -111,13 +121,9 @@
                 </div>
             </option>
         {/each}
-        <!--        <option value="">&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;</option>-->
-        <!--        {#each $applicationStore.users as user}-->
-        <!--            <option value={user.id}>{user?.name?.first} {user?.name?.last}</option>-->
-        <!--        {/each}-->
     </select>
     <ActionIcon on:click={handleToggleCamera}>
-        {#if !isCameraOff}
+        {#if isCameraOff}
             <span class="i-lucide-video-off"></span>
         {:else}
             <span class="i-lucide-video"></span>
@@ -125,7 +131,7 @@
     </ActionIcon>
 
     <ActionIcon on:click={handleToggleScreenShare}>
-        {#if !isScreenSharing}
+        {#if isScreenSharing}
             <span class="i-lucide-monitor-off"></span>
         {:else}
             <span class="i-lucide-monitor"></span>
@@ -133,7 +139,7 @@
     </ActionIcon>
 
     <ActionIcon on:click={handleToggleVoice}>
-        {#if !isMuted}
+        {#if isMuted}
             <span class="i-lucide-mic-off"></span>
         {:else}
             <span class="i-lucide-mic"></span>
