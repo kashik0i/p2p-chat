@@ -1,20 +1,33 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
+    import {randomGradiant} from "@/utils";
 
     export let name: 'container'
-    export let stream: MediaStream | null = null
+    export let stream: MediaStream;
     export let muted = true
-    export let video: HTMLVideoElement
+    let video: HTMLVideoElement
+
+    $: if (stream && video) {
+        video.srcObject = stream
+    }
+
+    $: isCameraOn = stream && stream.getVideoTracks().length > 0
+
     onMount(() => {
-        if (stream) {
-            video.srcObject = stream
-        }
+        video.style.background = randomGradiant()
     })
-
-
 </script>
-    <video bind:this={video} bind:muted autoplay></video>
+<video bind:this={video} bind:muted autoplay></video>
+<!--{isCameraOn}-->
+<!--{#if isCameraOn}-->
+<!--{:else }-->
+<!--    <div class="flex items-center justify-center h-full">-->
+<!--        <div class="text-4xl text-gray-400">-->
+<!--            <i class="fas fa-video-slash"></i>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--{/if}-->
 
 <style>
     video {

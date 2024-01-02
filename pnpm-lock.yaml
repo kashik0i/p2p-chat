@@ -26,6 +26,9 @@ dependencies:
   js-base64:
     specifier: ^3.7.5
     version: 3.7.5
+  opentok-layout-js:
+    specifier: ^5.3.0
+    version: 5.3.0
   peerjs:
     specifier: ^1.5.2
     version: 1.5.2
@@ -3153,6 +3156,10 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       mimic-fn: 4.0.0
+    dev: false
+
+  /opentok-layout-js@5.3.0:
+    resolution: {integrity: sha512-BRDfGc64NENnzwZF6QAPNOfjw5+BpaOq9STTyLFd8Gzju/wG+146fLWFMCjbYzyGOk3N5A8h2W4DVKqpzqFNZw==}
     dev: false
 
   /p-defer@4.0.0:

@@ -1,4 +1,4 @@
-<script lang="ts" xmlns="http://www.w3.org/1999/html">
+<script lang="ts">
     import {colorScheme, SvelteUIProvider, Stack, Switch, Text, Tabs} from '@svelteuidev/core';
     import HomeLayout from "@/layout/HomeLayout.svelte";
     import {writable} from "svelte/store";
@@ -11,6 +11,12 @@
 
     type AppState = 'home'| 'phone' | 'message' | 'hard-drive' | 'users' | 'settings'
     let layout = writable<AppState>("phone")
+
+    let stream;
+    let videoElement: HTMLVideoElement;
+    onMount(()=>{
+
+    })
 </script>
 <SvelteUIProvider withNormalizeCSS withGlobalStyles themeObserver={$colorScheme}>
     <div class="flex h-screen w-screen">

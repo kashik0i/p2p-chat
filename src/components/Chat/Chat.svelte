@@ -13,8 +13,8 @@
     let value = "";
     let currentUser = $applicationStore.userService.user;
     let conversations = $applicationStore.chatService.conversations;
-    let currentConversationId = $applicationStore.chatService.currentConversationId;
-    $: currentConversation = $conversations.find((c) => c.id === $currentConversationId);
+    export let currentConversationId: string | undefined;
+    $: currentConversation = $conversations.find((c) => c.id === currentConversationId);
 
 
     let openCameraModal = false;
@@ -31,7 +31,7 @@
             alert("Select a conversation first");
             return;
         }
-        $applicationStore.send(value, $currentConversationId);
+        $applicationStore.send(value, currentConversationId);
         value = "";
     }
 
@@ -41,7 +41,7 @@
         }
     }
 
-    function handleOpenModal(e){
+    function handleOpenModal(e) {
         const type = e.detail.type
         console.log(type)
         switch (type) {
@@ -54,66 +54,63 @@
         }
 
     }
-    function handleCameraUpload(e){
+
+    function handleCameraUpload(e) {
         if (!currentConversationId) {
             alert("Select a conversation first");
             return;
         }
         openCameraModal = false;
-        $applicationStore.sendFile(e.detail.file,e.detail.type, $currentConversationId);
+        $applicationStore.sendFile(e.detail.file, e.detail.type, currentConversationId);
     }
 
-    function handleUpload(e){
+    function handleUpload(e) {
         if (!currentConversationId) {
             alert("Select a conversation first");
             return;
         }
         openFileModal = false;
-        $applicationStore.sendFile(e.detail.file,e.detail.type,$currentConversationId);
+        $applicationStore.sendFile(e.detail.file, e.detail.type, currentConversationId);
     }
 
 
-
-
-
 </script>
-<div class="flex flex-col flex-auto h-full p-4 w-full">
-    <div class="flex flex-col flex-auto flex-shrink-0 rounded-2xl  h-full p-4">
-        <div class="flex flex-col h-full overflow-x-auto mb-4">
-            <div class="flex flex-col h-full">
-                <div class="grid grid-cols-12 gap-y-2">
-                    {#if $currentConversationId === null}
-                        <div class="col-span-12">
-                            <div class="flex flex-col justify-center items-center h-full">
-                                <div class=" text-xl font-medium">
-                                    Select a conversation
-                                </div>
-                            </div>
+<div class="flex flex-col w-full  h-full overflow-auto mb-4">
+    <div class="flex flex-col h-full">
+        <div class="grid grid-cols-12 gap-y-2">
+            {#if !currentConversationId}
+                <div class="col-span-12">
+                    <div class="flex flex-col justify-center items-center h-full">
+                        <div class=" text-xl font-medium">
+                            Select a conversation
                         </div>
-                    {:else}
-                        {#each currentConversation?.messages as message}
-                            <div class="col-span-12">
-                                <Message
-                                        seen={true}
-                                        isSelf={message.senderId === $currentUser.id.toString()}
-                                        message={message}
-                                />
-                            </div>
-                        {/each}
-                    {/if}
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="flex flex-row items-center h-16 rounded-xl w-full px-4">
-            <AttachmentButton on:upload={handleOpenModal}/>
-            <ChatInput on:keydown={handleEnter} bind:value/>
-            <SendButton on:click={handleSend}/>
+            {:else}
+                {#each currentConversation?.messages as message}
+                    <div class="col-span-12">
+                        <Message
+                                seen={true}
+                                isSelf={message.senderId === $currentUser.id.toString()}
+                                message={message}
+                        />
+                    </div>
+                {/each}
+            {/if}
         </div>
     </div>
 </div>
-<Modal bind:opened={openCameraModal} withCloseButton={true} closeOnClickOutside  title="Capture Image" on:close={() => openCameraModal = false}>
-    <CameraModal  on:submit={handleCameraUpload}/>
+<div class="flex flex-row items-center h-16 rounded-xl w-full px-4">
+    <AttachmentButton on:upload={handleOpenModal}/>
+    <ChatInput on:keydown={handleEnter} bind:value/>
+    <SendButton on:click={handleSend}/>
+</div>
+
+<Modal bind:opened={openCameraModal} withCloseButton={true} closeOnClickOutside title="Capture Image"
+       on:close={() => openCameraModal = false}>
+    <CameraModal on:submit={handleCameraUpload}/>
 </Modal>
-<Modal bind:opened={openFileModal} withCloseButton={true} closeOnClickOutside title="Upload File" on:close={() => openFileModal = false}>
+<Modal bind:opened={openFileModal} withCloseButton={true} closeOnClickOutside title="Upload File"
+       on:close={() => openFileModal = false}>
     <FileModal on:submit={handleUpload}/>
 </Modal>

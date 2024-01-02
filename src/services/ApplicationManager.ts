@@ -459,7 +459,7 @@ export class ApplicationManager {
                     this.callService.dropUserFromCall(participant.id)
                 }
             })
-        }, 10000)
+        }, 30000)
     }
 
     async toggleCall(calleeId: string) {

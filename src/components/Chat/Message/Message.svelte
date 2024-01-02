@@ -66,7 +66,11 @@
             </div>
         </OtherMessage>
     {/if}
-
-    <!--    <svelte:component this={component} {...props}/>-->
 </div>
 
+<style>
+    audio, video {
+        max-width: 100%;
+        max-height: 200px;
+    }
+</style>
