@@ -238,8 +238,10 @@ export class ApplicationManager {
                     participant.stream.push({
                         stream,
                         type: metadata.mediaStreamInfo.type,
-                        userId: metadata.mediaStreamInfo.userId
-                    })
+                        userId: metadata.mediaStreamInfo.userId,
+                    } as MediaStreamInfo)
+                    participant.isCameraOff = false
+                    participant.isMuted = false
                     // this.callService.addStreamToParticipant(participant.id, metadata.mediaStreamInfo)
                     return participants
                 })
@@ -259,6 +261,11 @@ export class ApplicationManager {
                     return currentCall
                 }
                 participant.stream.find(streamInfo => streamInfo.stream.id === stream.id)?.stream.addTrack(track)
+                if(track.kind === 'audio'){
+                    participant.isMuted = false
+                }else{
+                    participant.isCameraOff = false
+                }
                 // this.callService.addTrackToParticipantStream(participant.id, stream, track)
                 // this.callService.addStreamToParticipant(participant.id, stream)
                 return currentCall

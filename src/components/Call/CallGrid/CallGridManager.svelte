@@ -58,13 +58,15 @@
         }
     });
     let users = $applicationStore.users
-    $: currentUser = $applicationStore.userService.user
+    let currentUser=$applicationStore.userService.user
+
+    const isCurrentUser=(user)=>user.id===$currentUser.id
 </script>
 <!--<button on:click={()=>layout.layout()}>layout</button>-->
 <div bind:this={layoutElement} class="layoutContainer p-2 m-2">
     {#each participantsFlat as {user, stream, isMuted, isCameraOff, status}}
         <!--{JSON.stringify(stream)}-->
-        <CallGridItem streamInfo={stream} user={user}  isCameraOff={isCameraOff} isMuted={isMuted}
+        <CallGridItem streamInfo={stream} {user} {isCameraOff} isMuted={isMuted||isCurrentUser(user)}
         on:video on:audio/>
     {/each}
 </div>

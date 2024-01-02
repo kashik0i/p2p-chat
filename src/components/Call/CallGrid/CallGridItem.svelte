@@ -6,6 +6,7 @@
     import VideoContainer from "@components/Call/VideoContainer.svelte";
     import Avatar from "@components/Avatar.svelte";
     import type {MediaStreamInfo} from "@/interfaces/MediaStreamInfo";
+    import {applicationStore} from "@stores/applicationStore";
 
     const dispatch = createEventDispatcher()
 
@@ -20,7 +21,7 @@
 <div>
     <div class="w-full h-full">
         {#if streamInfo?.stream && !isCameraOff}
-            <VideoContainer stream={streamInfo.stream}/>
+            <VideoContainer stream={streamInfo.stream} muted={isMuted}/>
         {:else}
             <img class="w-full h-full object-cover" src={user?.avatar} alt={user?.name}/>
         {/if}
