@@ -55,7 +55,7 @@
 </MediaQuery>
 <!-- Small screen -->
 <MediaQuery query="(max-width: 600px)" styles={{ bc: '$blue50', d:"none" }}>
-    <div class="flex flex-col py-8  p-2   h-full w-full max-w-fit ">
+    <div class="flex flex-col py-8  p-2 h-full w-full max-w-fit shadow-md rounded-2xl ">
         <div class="flex flex-row items-center justify-center h-12 w-full">
             <div
                     class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0"
@@ -66,7 +66,6 @@
         <div class="flex flex-col mt-8 h-full">
             <div class="flex flex-row items-center justify-between text-xs">
                 <span class="font-bold">Conversations</span>
-                <!--                <Badge color="red" size="sm">{totalUnread}</Badge>-->
             </div>
             <div class="flex flex-col space-y-1 mt-4 -mx-2  overflow-y-auto scrollbar scrollbar-w-1 scrollbar-thumb-rounded scrollbar-thumb-gray-300 scrollbar-track-gray-100 ">
                 {#each $conversations as {avatar, name, id, unread}}
@@ -79,6 +78,8 @@
                         {/if}
                         <div class="flex items-center">
                             <div class=" text-sm font-semibold">{name}</div>
+                            <Badge color="red" size="sm" class="ml-2 w-7">{1}</Badge>
+
                             {#if unread}
                                 <Badge color="red" size="sm" class="ml-2 w-7">{unread}</Badge>
                             {/if}

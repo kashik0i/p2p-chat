@@ -157,6 +157,5 @@ export class ChatService {
             conversation.messages = conversation.messages.filter(message => message.id !== messageId)
             return conversations;
         })
-
     }
 }
