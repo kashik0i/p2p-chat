@@ -5,9 +5,10 @@
     import {CallStateEnum} from "@/enums/CallStateEnum";
     import {Modal} from "@svelteuidev/core";
     import {onMount} from "svelte";
+    import ringtoneSrc from "@assets/ringtone.mp3";
 
     export let opened = false;
-
+    let ringtone:HTMLAudioElement;
     onMount(()=>{
         // $applicationStore.callService.onCallStateChange((call)=>{
         //     if(call.state === CallStateEnum.RINGING){
@@ -17,6 +18,14 @@
         const unsubscribe = $applicationStore.callService.currentCall.subscribe((currentCall)=>{
             if(currentCall?.state === CallStateEnum.Ringing){
                 opened = true;
+                // play ringtone
+                ringtone.play();
+            }
+            if(currentCall?.state === CallStateEnum.Ended){
+                opened = false;
+                // stop ringtone
+                ringtone.pause();
+                ringtone.currentTime = 0;
             }
         })
         return ()=>{
@@ -26,10 +35,12 @@
    const handleAnswer=async () => {
        await $applicationStore.answerCall();
        opened = false;
+       ringtone.pause();
    }
     const handleReject=async () => {
         await $applicationStore.rejectCall();
         opened = false;
+        ringtone.pause();
     }
 
 
@@ -56,6 +67,7 @@
             </div>
     </div>
 </Modal>
+<audio bind:this={ringtone} id="ringtone" src={ringtoneSrc}  loop hidden></audio>
 
 <style>
 
