@@ -9,11 +9,11 @@
     }
 
     const navIcons: NavIcon[] = [
-        {
-            name: 'home',
-            icon: Home,
-            active: true,
-        },
+        // {
+        //     name: 'home',
+        //     icon: Home,
+        //     active: true,
+        // },
         {
             name: 'message',
             icon: MessageSquare,

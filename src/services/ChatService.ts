@@ -149,4 +149,14 @@ export class ChatService {
     getConversationById(id: string) {
         return get(this.conversations).find(conversation => conversation.id === id)
     }
+
+    removeMessage(conversationId: string, messageId: string) {
+        this.conversations.update(conversations => {
+            const conversation = conversations.find(conversation => conversation.id === conversationId)
+            if (!conversation) return conversations;
+            conversation.messages = conversation.messages.filter(message => message.id !== messageId)
+            return conversations;
+        })
+
+    }
 }

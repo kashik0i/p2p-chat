@@ -8,15 +8,25 @@
     import SettingsLayout from "@/layout/SettingsLayout.svelte";
     import Navigation from "@components/Navigation/Navigation.svelte";
     import {onMount} from "svelte";
+    import PhoneBook from "@components/Call/PhoneBook.svelte";
+    import {applicationStore} from "@stores/applicationStore";
+    import AppFileSystem from "@components/AppFileSystem.svelte";
 
     type AppState = 'home'| 'phone' | 'message' | 'hard-drive' | 'users' | 'settings'
     let layout = writable<AppState>("phone")
-
-    let stream;
-    let videoElement: HTMLVideoElement;
+    let users = $applicationStore.users
     onMount(()=>{
 
     })
+
+    window.requestFileSystem = window.requestFileSystem ||  // Chrome
+        window.webkitRequestFileSystem;  // Others
+    /*window.requestFileSystem(window.TEMPORARY, 1024 * 1024, function (fs) {
+        console.log('file system open: ' + fs.name);
+
+    }, (e) => {
+        console.log(e);
+    });*/
 </script>
 <SvelteUIProvider withNormalizeCSS withGlobalStyles themeObserver={$colorScheme}>
     <div class="flex h-screen w-screen">
@@ -37,6 +47,12 @@
             {/if}
             {#if $layout === "phone"}
                 <CallLayout/>
+            {/if}
+            {#if $layout === "hard-drive"}
+               <AppFileSystem/>
+            {/if}
+            {#if $layout === "users"}
+                <PhoneBook users={$users}/>
             {/if}
             {#if $layout === "settings"}
                 <SettingsLayout/>
