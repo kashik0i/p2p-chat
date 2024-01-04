@@ -21,6 +21,7 @@ export class CallService {
     ee: EventEmitter<CallEvent, this> = new EventEmitter<CallEvent, this>()
     callLog = writable<PeerCall[]>()
     layout: any;
+    volume: Writable<number> = writable(100)
 
     constructor() {
         console.log('CallService constructor')

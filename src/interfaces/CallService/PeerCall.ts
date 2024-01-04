@@ -28,4 +28,5 @@ export interface PeerCall {
         conversationId: string,
         avatar: string,
     }
+    volume: Writable<number>,
 }

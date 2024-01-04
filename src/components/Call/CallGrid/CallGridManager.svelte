@@ -60,14 +60,14 @@
     });
     let users = $applicationStore.users
     let currentUser = $applicationStore.userService.user
-
+    let volume = $applicationStore.callService.volume
     const isCurrentUser = (user) => user.id === $currentUser.id
 </script>
 <div bind:this={layoutElement} class="layoutContainer p-2 m-2">
     {#each participantsFlat as {user, stream, isMuted, isCameraOff, status}}
         {#if status === 'Answered'}
             <CallGridItem streamInfo={stream} {user} {isCameraOff} isMuted={isMuted||isCurrentUser(user)} on:video
-                          on:audio/>
+                          on:audio volume={$volume}/>
         {/if}
     {/each}
 </div>

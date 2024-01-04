@@ -15,13 +15,26 @@
     export let isCameraOff: boolean
     export let isMuted: boolean
     export let user: User;
+    export let volume: number = 100
+
+    onMount(()=>{
+        /*const {callService} = applicationStore
+        if(callService){
+            callService.on("stream-updated",({stream,userId})=>{
+                if(userId === user.id){
+                    streamInfo = stream
+                }
+            })
+        }*/
+
+    })
 
 
 </script>
 <div>
     <div class="w-full h-full">
         {#if streamInfo?.stream}
-            <VideoContainer stream={streamInfo.stream} muted={isMuted}/>
+            <VideoContainer stream={streamInfo.stream} muted={isMuted} bind:volume/>
         {:else}
             <img class="w-full h-full object-cover" src={user?.avatar} alt={user?.name}/>
         {/if}

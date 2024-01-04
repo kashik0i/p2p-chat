@@ -12,7 +12,6 @@
     import type {CallParticipant} from "@/interfaces/CallService/CallParticipant";
 
     let call: PeerCall | null = null;
-    let volume = 50;
 
     export let isCameraOff = false;
     export let isScreenSharing = false;
@@ -54,11 +53,13 @@
             set(get(call.participants).find(participant => participant.id === user.id) ?? null)
         }
     )
+    let volume = $applicationStore.callService.volume;
     onMount(() => {
         const callUnsubscribe = $applicationStore.callService.currentCall.subscribe((_call) => {
             call = _call
             // isCameraOff = _call?.participants?.isCameraOff ?? false;
         })
+
         return () => {
             callUnsubscribe()
         }
@@ -70,7 +71,6 @@
     let onClose = () => {
         opened = false;
     }
-
     const handleToggleCamera = () => {
         $applicationStore.toggleCamera($currentUser)
         isCameraOff = !isCameraOff;
@@ -147,17 +147,17 @@
     </ActionIcon>
     <Menu {opened} on:open={onOpen} {onClose}>
         <ActionIcon slot="control">
-            {#if volume === 0}
+            {#if $volume === 0}
                 <span class="i-lucide-volume-x"></span>
-            {:else if volume < 25}
+            {:else if $volume < 25}
                 <span class="i-lucide-volume"></span>
-            {:else if volume < 50}
+            {:else if $volume < 50}
                 <span class="i-lucide-volume-1"></span>
-            {:else if volume <= 100}
+            {:else if $volume <= 100}
                 <span class="i-lucide-volume-2"></span>
             {/if}
         </ActionIcon>
-        <Slider bind:value={volume}/>
+        <Slider bind:value={$volume}/>
     </Menu>
     <ActionIcon>
         <span class="i-lucide-more-vertical"></span>

@@ -13,7 +13,10 @@
     }
 
     $: isCameraOn = stream && stream.getVideoTracks().length > 0
-
+    export let volume = 100;
+    $: if (video) {
+        video.volume = volume / 100
+    }
     onMount(() => {
         video.style.background = randomGradiant()
     })

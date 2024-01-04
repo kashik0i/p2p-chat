@@ -307,6 +307,21 @@ export class ApplicationManager {
             localStorage.setItem('theme', value)
         })
 
+        // this.callService.volume.subscribe((value) => {
+        //     const currentCall = get(this.callService.currentCall)
+        //     if (!currentCall) {
+        //         return
+        //     }
+        //     const participants = get(currentCall.participants)
+        //     participants.forEach(participant => {
+        //         participant.stream.forEach(({stream})=> {
+        //             stream.getAudioTracks().forEach(track => {
+        //                 track.enabled = value > 0
+        //                 track.volume = value
+        //             })
+        //         });
+        //     })
+        // })
     }
 
     private init() {
