@@ -121,6 +121,7 @@ export class CallService {
                     stream: [],
                     isMuted: true,
                     isCameraOff: true,
+                    isScreenSharing: false,
                 }))) as Writable<CallParticipant[]>,
                 state: isGroupCall ? CallStateEnum.Answered : CallStateEnum.Outgoing,
                 metadata: {
@@ -395,6 +396,60 @@ export class CallService {
         streamInfo.stream.getTracks().forEach(track => {
             if (track.kind === 'video') {
                 track.enabled = !participant.isCameraOff
+            } else if (track.kind === 'audio') {
+                track.enabled = !participant.isMuted
+            }
+        })
+    }
+
+    async toggleScreenShare(user: User, isCurrentUser: boolean) {
+        const currentCall = get(this.currentCall)
+        if (!currentCall) {
+            return
+        }
+        const participants = get(currentCall.participants)
+        const participant = participants.find(participant => participant.id === user.id)
+        if (!participant) {
+            return
+        }
+        let streamInfo = participant.stream.find(stream => stream.type === 'screen')
+        if (isCurrentUser) {
+            if (!streamInfo) {
+                //add stream to participant
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: false,
+                })
+                streamInfo = {
+                    type: 'screen',
+                    userId: user.id,
+                    stream: stream,
+                } as MediaStreamInfo
+                this.addStreamToParticipant(user.id, streamInfo)
+                this.ee.emit("streamAdded", streamInfo)
+            }
+        }
+        this.currentCall.update((call) => {
+            if (!call) {
+                return call
+            }
+            call.participants.update((participants) => {
+                const participant = participants.find(participant => participant.id === user.id)
+                if (!participant) {
+                    return participants
+                }
+                participant.isScreenSharing = !participant.isScreenSharing
+                return participants
+            })
+            return call
+        })
+        if (!streamInfo) {
+            console.log('no video track')
+            return
+        }
+        streamInfo.stream.getTracks().forEach(track => {
+            if (track.kind === 'video') {
+                track.enabled = !participant.isScreenSharing
             } else if (track.kind === 'audio') {
                 track.enabled = !participant.isMuted
             }

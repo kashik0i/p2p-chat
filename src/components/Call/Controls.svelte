@@ -131,7 +131,7 @@
     </ActionIcon>
 
     <ActionIcon on:click={handleToggleScreenShare}>
-        {#if isScreenSharing}
+        {#if !isScreenSharing}
             <span class="i-lucide-monitor-off"></span>
         {:else}
             <span class="i-lucide-monitor"></span>

@@ -132,6 +132,7 @@ export class ApplicationManager {
                         stream: [],
                         isMuted: true,
                         isCameraOff: true,
+                        isScreenSharing: false,
                     }))) as Writable<CallParticipant[]>,
                     state: CallStateEnum.Ringing,
                     metadata: call.metadata
@@ -168,6 +169,7 @@ export class ApplicationManager {
                                 stream: [],
                                 isMuted: true,
                                 isCameraOff: true,
+                                isScreenSharing: false,
                             })
                         } else {
                             participant.status = CallStateEnum.Answered
@@ -562,7 +564,9 @@ export class ApplicationManager {
     }
 
     async toggleScreenShare(user: User) {
-        // await this.callService.toggleShareScreen(user, 'screen', 'video', true)
+        const currentUser = get(this.userService.user)
+        const isCurrentUser = user.id === currentUser.id
+        await this.callService.toggleScreenShare(user, isCurrentUser)
     }
 
 
