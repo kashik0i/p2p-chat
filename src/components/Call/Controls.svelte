@@ -86,10 +86,10 @@
     $: isMuted= $currentParticipant?.isMuted ?? true;
     $: isCameraOff= $currentParticipant?.isCameraOff ?? true;
 </script>
-<pre>{$currentParticipant?.isCameraOff}</pre>
+<!--<pre>{$currentParticipant?.isCameraOff}</pre>
 <pre>{$currentParticipant?.isMuted}</pre>
 <pre>{isCameraOff}</pre>
-<pre>{isMuted}</pre>
+<pre>{isMuted}</pre>-->
 <div class="flex flex-row m-2 p-2">
     <ActionIcon on:click={() => $applicationStore.toggleCall(calleeId)}>
         {#if call === null}

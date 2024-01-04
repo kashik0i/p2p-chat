@@ -63,7 +63,6 @@
 
     const isCurrentUser = (user) => user.id === $currentUser.id
 </script>
-<!--<button on:click={()=>layout.layout()}>layout</button>-->
 <div bind:this={layoutElement} class="layoutContainer p-2 m-2">
     {#each participantsFlat as {user, stream, isMuted, isCameraOff, status}}
         {#if status === 'Answered'}

@@ -6,6 +6,8 @@
     import {applicationStore} from "@stores/applicationStore";
     import {ActionIcon, Button, Collapse} from "@svelteuidev/core";
     import {watchResize} from "svelte-watch-resize";
+    import CallModal from "@components/Modal/CallModal.svelte";
+    import PhoneBook from "@components/Call/PhoneBook.svelte";
 
     let currentCall = $applicationStore.callService.currentCall
     let currentSideMenu = "chat"
@@ -25,6 +27,7 @@
             $applicationStore.callService.layout?.layout()
         }, 50)
     }
+    $: users = $applicationStore.users
 </script>
 <div class="flex flex-col flex-auto ">
     <div class="flex flex-grow w-full h-full overflow-clip">
@@ -36,7 +39,7 @@
                 {#if currentSideMenu === "chat"}
                     <Chat currentConversationId={$currentCall?.metadata.conversationId}/>
                 {:else}
-                    <div>phonebook</div>
+                    <PhoneBook users={$users}/>
                 {/if}
             </div>
             <div class="flex flex-col h-full">
@@ -52,7 +55,7 @@
     <Controls/>
 </div>
 
-<!--<CallModal bind:callRequest={currentCall}/>-->
+<CallModal/>
 
 <style>
     .hidden {

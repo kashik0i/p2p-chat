@@ -119,6 +119,7 @@ export class ApplicationManager {
                 if (!caller) {
                     throw new Error('caller not found')
                 }
+                //TODO: add to call request later, instead of creating new call
                 this.callService.currentCall.set({
                     id: call.id,
                     callerId: call.callerId,
@@ -487,7 +488,24 @@ export class ApplicationManager {
         await this.createCall(calleeId)
 
     }
-
+    async rejectCall() {
+        const currentCall = get(this.callService.currentCall)
+        if (!currentCall) {
+            throw new Error('currentCall not found')
+        }
+        const currentUser = get(this.userService.user)
+        const peerIds = get(currentCall.participants)
+            .filter(participant => participant.id !== currentUser.id)
+            //maybe peerId is not set yet
+            .map(participant => this.getUserById(participant.id)?.peerId ?? "")
+        await this.peerService.actions.callData.send({
+            id: currentCall.id,
+            state: CallStateEnum.Ended,
+            senderId: get(this.userService.user).id,
+            receiverId: currentCall.callerId,
+        }, peerIds)
+        this.callService.endCall()
+    }
     async answerCall() {
         const currentCall = get(this.callService.currentCall)
         const users = get(this.users)
