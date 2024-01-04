@@ -195,14 +195,14 @@ export class ApplicationManager {
             switch (callData.state) {
                 case  CallStateEnum.Busy:
                 case CallStateEnum.Ended:
-                    const currentUser = get(this.userService.user)
-                    const streams = this.callService.getUserStream(callData.senderId)
-                    if (!streams) {
-                        return
-                    }
-                    streams.forEach(({stream}) => {
-                        this.peerService.instance.removeStream(stream, [peerId])
-                    })
+                    // const currentUser = get(this.userService.user)
+                    // const streams = this.callService.getUserStream(callData.senderId)
+                    // if (!streams) {
+                    //     return
+                    // }
+                    // streams.forEach(({stream}) => {
+                    //     this.peerService.instance.removeStream(stream, [peerId])
+                    // })
                     this.callService.dropUserFromCall(callData.senderId)
 
                     //TODO: if no participants left and call type is not group, end call

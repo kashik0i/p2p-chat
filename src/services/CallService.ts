@@ -280,7 +280,7 @@ export class CallService {
             if (!streamInfo) {
                 //add stream to participant
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: !participant.isCameraOff,
                     audio: true,
                 })
                 streamInfo = {
@@ -349,7 +349,7 @@ export class CallService {
                 //add stream to participant
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: true,
-                    audio: true,
+                    audio: !participant.isMuted,
                 })
                 streamInfo = {
                     type: 'camera',
