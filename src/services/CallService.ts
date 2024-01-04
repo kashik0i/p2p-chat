@@ -281,7 +281,6 @@ export class CallService {
             if (!streamInfo) {
                 //add stream to participant
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: !participant.isCameraOff,
                     audio: true,
                 })
                 streamInfo = {
@@ -291,21 +290,16 @@ export class CallService {
                 } as MediaStreamInfo
                 this.addStreamToParticipant(user.id, streamInfo)
                 this.ee.emit("streamAdded", streamInfo)
+            } else if (streamInfo.stream.getAudioTracks().length === 0) {
+                // add video track to stream
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                })
+                const track = stream.getAudioTracks()[0]
+                this.addTrackToParticipantStream(user.id, streamInfo.stream, track)
+                this.ee.emit("trackAdded", track, streamInfo.stream)
+
             }
-            // else if (streamInfo.stream.getAudioTracks().length === 0) {
-            //     const stream = await navigator.mediaDevices.getUserMedia({
-            //         video: !participant.isCameraOff,
-            //         audio: true,
-            //     })
-            //     streamInfo = {
-            //         type: 'camera',
-            //         userId: user.id,
-            //         stream: stream,
-            //     } as MediaStreamInfo
-            //     const audioTrack = streamInfo.stream.getAudioTracks()[0]
-            //     this.addTrackToParticipantStream(user.id, stream, audioTrack)
-            //     this.ee.emit("trackAdded", audioTrack, stream)
-            // }
         }
         this.currentCall.update((call) => {
             if (!call) {
@@ -350,7 +344,6 @@ export class CallService {
                 //add stream to participant
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: true,
-                    audio: !participant.isMuted,
                 })
                 streamInfo = {
                     type: 'camera',
@@ -360,20 +353,15 @@ export class CallService {
                 this.addStreamToParticipant(user.id, streamInfo)
                 this.ee.emit("streamAdded", streamInfo)
             }
-            // else if (streamInfo.stream.getVideoTracks().length === 0) {
-            //     const stream = await navigator.mediaDevices.getUserMedia({
-            //         video: true,
-            //         audio: !participant.isMuted,
-            //     })
-            //     streamInfo = {
-            //         type: 'camera',
-            //         userId: user.id,
-            //         stream: stream,
-            //     } as MediaStreamInfo
-            //     const videoTrack = streamInfo.stream.getVideoTracks()[0]
-            //     this.addTrackToParticipantStream(user.id, streamInfo.stream, videoTrack)
-            //     this.ee.emit("trackAdded", videoTrack, stream)
-            // }
+            else if (streamInfo.stream.getVideoTracks().length === 0) {
+                // add video track to stream
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                })
+                const track = stream.getVideoTracks()[0]
+                this.addTrackToParticipantStream(user.id, streamInfo.stream, track)
+                this.ee.emit("trackAdded", track, streamInfo.stream)
+            }
         }
         this.currentCall.update((call) => {
             if (!call) {
