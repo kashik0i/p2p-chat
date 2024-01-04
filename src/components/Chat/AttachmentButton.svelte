@@ -5,42 +5,42 @@
 
     const dispatch = createEventDispatcher();
 
-    function handleFile(){
-        dispatch('upload',{type:'file'})
+    function handleFile() {
+        dispatch('upload', {type: 'file'})
     }
 
-    function handleImage(){
-        dispatch('upload',{type:'image'})
+    function handleImage() {
+        dispatch('upload', {type: 'image'})
     }
 
-    function handleMap(){
-        dispatch('upload',{type:'map'})
+    function handleMap() {
+        dispatch('upload', {type: 'map'})
     }
 
-    function handleCamera(){
-        dispatch('upload',{type:'camera'})
+    function handleCamera() {
+        dispatch('upload', {type: 'camera'})
     }
 
 </script>
-
 <div>
-    <Menu>
-        <ActionIcon slot="control">
+    <Menu class="" trigger="click">
+        <ActionIcon slot="control" class="w-2">
             <span class="i-lucide-paperclip"/>
         </ActionIcon>
-        <Menu.Item>
-           <ActionIcon on:click={handleImage}>
-               <span class="i-lucide-image"/>
-           </ActionIcon>
+        <div class="flex flex-row space-x-2 p-2">
+            <ActionIcon on:click={handleImage}>
+                <span class="i-lucide-image"/>
+            </ActionIcon>
             <ActionIcon on:click={handleMap}>
-               <span class="i-lucide-map"/>
-           </ActionIcon>
+                <span class="i-lucide-map"/>
+            </ActionIcon>
             <ActionIcon on:click={handleCamera}>
-               <span class="i-lucide-camera"/>
-           </ActionIcon>
+                <span class="i-lucide-camera"/>
+            </ActionIcon>
             <ActionIcon on:click={handleFile}>
-               <span class="i-lucide-file"/>
-           </ActionIcon>
-        </Menu.Item>
+                <span class="i-lucide-file"/>
+            </ActionIcon>
+        </div>
+
     </Menu>
 </div>
